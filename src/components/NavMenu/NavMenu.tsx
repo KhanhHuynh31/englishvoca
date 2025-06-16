@@ -10,7 +10,7 @@ export default function NavMenu() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const menuItems = [
-    { href: "/unit", icon: "📚", label: "Học từ mới" },
+    { href: "/learn/unit", icon: "📚", label: "Học từ mới" },
     { href: "/lessons", icon: "💪", label: "Luyện tập" },
     { href: "/wordbook", icon: "🎯", label: "Sổ từ của tôi" },
     { href: "/mission", icon: "🏆", label: "Nhiệm vụ" },
