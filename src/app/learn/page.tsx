@@ -1,5 +1,7 @@
 "use client";
-import React, { useRef, useState } from "react";
+import Listening from "@/components/Listening/Listening";
+import Image from "next/image";
+import React, { useState } from "react";
 
 interface VocabularyItem {
   word: string;
@@ -7,7 +9,6 @@ interface VocabularyItem {
   example: string;
   phonetic: string;
   imageUrl: string;
-  audioUrl: string;
   synonyms: string[];
   otherMeanings: string[];
   definition: string;
@@ -46,8 +47,6 @@ export default function FlashcardPage() {
       otherMeanings: ["A happy coincidence", "Happy to help"],
       imageUrl:
         "https://cdn.pixabay.com/photo/2017/11/09/21/41/cat-2934720_960_720.jpg",
-      audioUrl:
-        "https://www.oxfordlearnersdictionaries.com/media/english/us_pron/h/hap/happy/happy__us_1.mp3",
       synonyms: ["cheerful", "joyful", "content", "pleased"],
     },
     {
@@ -60,8 +59,6 @@ export default function FlashcardPage() {
       otherMeanings: ["A happy coincidence", "Happy to help"],
       imageUrl:
         "https://cdn.pixabay.com/photo/2017/11/09/21/41/cat-2934720_960_720.jpg",
-      audioUrl:
-        "https://www.oxfordlearnersdictionaries.com/media/english/us_pron/h/hap/happy/happy__us_1.mp3",
       synonyms: ["cheerful", "joyful", "content", "pleased"],
     },
   ];
@@ -71,7 +68,6 @@ export default function FlashcardPage() {
     mockVocabularyData.map(() => null)
   );
   const [isFlipped, setIsFlipped] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const current = mockVocabularyData[index];
   const progress = ((index + 1) / mockVocabularyData.length) * 100;
   const [isCompleted, setIsCompleted] = useState(false);
@@ -161,7 +157,9 @@ export default function FlashcardPage() {
               className="absolute md:static w-full h-full md:h-auto backface-hidden p-5 rounded-xl"
             >
               <div className="flex flex-col items-center text-center">
-                <img
+                <Image
+                  width={200}
+                  height={200}
                   src={current.imageUrl}
                   alt={current.word}
                   className="w-full max-w-xs h-52 object-cover rounded-lg mb-4"
@@ -174,16 +172,7 @@ export default function FlashcardPage() {
                 </p>
                 <div className="text-gray-500 mt-1 flex items-center justify-center gap-2">
                   <span>{current.phonetic}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      audioRef.current?.play();
-                    }}
-                    className="p-1 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-700 transition"
-                  >
-                    🔊
-                  </button>
-                  <audio ref={audioRef} src={current.audioUrl} />
+                  <Listening word={current.word} />
                 </div>
                 <p className="mt-4 text-lg text-gray-800">
                   <strong>Ý nghĩa:</strong> {current.meaning}
