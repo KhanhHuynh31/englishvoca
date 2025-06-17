@@ -63,7 +63,7 @@ export default function QuizTopics() {
     title: "🌟 Quiz Tổng Hợp Từ Đã Học",
     description: "Luyện tập lại những từ vựng bạn đã học gần đây.",
     image: "https://source.unsplash.com/150x150/?vocabulary,brain",
-    route: "practice",
+    route: "/practice/quiz/custom",
   };
 
   const topics = ["Tất cả", "Ngữ pháp", "Từ vựng", "Câu"];

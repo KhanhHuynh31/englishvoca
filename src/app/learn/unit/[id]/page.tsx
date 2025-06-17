@@ -1,6 +1,7 @@
 "use client";
 import Listening from "@/components/Listening/Listening";
 import Loading from "@/components/Loading/Loading";
+import { saveVocabHistory } from "@/lib/vocabularyDB";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -64,7 +65,7 @@ export default function FlashcardPage() {
     };
 
     loadData();
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     if (index >= vocabData.length && vocabData.length > 0) setIndex(0);
@@ -84,10 +85,22 @@ export default function FlashcardPage() {
     setIsFlipped(false);
   };
 
-  const setCardStatus = (newStatus: Exclude<StatusType, null>) => {
+  const setCardStatus = async  (newStatus: Exclude<StatusType, null>) => {
     const updated = [...statuses];
     updated[index] = newStatus;
     setStatuses(updated);
+    const currentWord = vocabData[index];
+    const today = new Date().toISOString().split("T")[0]; // yyyy-mm-dd
+
+    await saveVocabHistory({
+      id: `${id}-${currentWord.word}`, // unique theo unit + từ
+      word: currentWord.word,
+      meaning: currentWord.meaning,
+      image_url: currentWord.image_url,
+      phonetic: currentWord.phonetic,
+      status: newStatus,
+      date: today,
+    });
     setTimeout(() => {
       if (index + 1 >= vocabData.length) setIsCompleted(true);
       else {
