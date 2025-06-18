@@ -12,6 +12,7 @@ export interface Word {
   image_url: string;
   pronunciation: string;
   meaning: string;
+  phonetic: string;
   lastReviewed: string;
 }
 
@@ -26,6 +27,7 @@ export const useGetIndexDB = () => {
         definition: item.meaning,
         image_url: item.image_url,
         meaning: item.meaning,
+        phonetic: item.phonetic,
         status: item.status as StatusType,
         pronunciation: item.word,
         lastReviewed: item.date,

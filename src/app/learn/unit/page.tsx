@@ -89,7 +89,7 @@ export default function BookUnits() {
       {/* Filters */}
       <div className="mb-6 flex items-center justify-center flex-wrap gap-3">
         {renderFilterGroup(
-          "Type",
+          "type",
           ["Tất cả", "Ngữ pháp", "Từ vựng", "Giao tiếp"],
           filterType,
           setFilterType

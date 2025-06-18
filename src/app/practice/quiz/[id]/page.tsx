@@ -128,12 +128,8 @@ export default function VocabularyQuiz() {
           <div className="text-3xl font-bold text-blue-700 text-center">
             <div className="flex items-center justify-center gap-2">
               {current.word}
-              {current.phonetic && (
-                <span className="text-xl text-gray-500">
-                  {current.phonetic}
-                </span>
-              )}
             </div>
+            <span className="text-xl text-gray-500">{current.phonetic}</span>
             <Listening word={current.word} />
           </div>
 
@@ -181,7 +177,7 @@ export default function VocabularyQuiz() {
         <div className="flex-1 flex items-center justify-center min-h-[250px]">
           {showHint ? (
             <Image
-              src={current.imageUrl}
+              src={`https://placehold.co/300x300.png?text=${current.word}`}
               width={300}
               height={300}
               alt={current.word}

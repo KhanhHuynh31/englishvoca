@@ -97,8 +97,8 @@ const WordBook = () => {
               }}
               className="px-2 py-2 rounded-xl border font-semibold md:hidden"
             >
-              <option value="new">Chưa thuộc</option>
-              <option value="known">Đã thuộc</option>
+              <option value="new">Từ mới</option>
+              <option value="known">Từ đã học</option>
               <option value="hard">Từ khó</option>
             </select>
 
@@ -119,8 +119,8 @@ const WordBook = () => {
                 >
                   {
                     {
-                      new: "Chưa thuộc",
-                      known: "Đã thuộc",
+                      new: "Từ mới",
+                      known: "Từ đã học",
                       hard: "Từ khó",
                     }[status]
                   }{" "}
