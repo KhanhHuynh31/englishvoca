@@ -117,7 +117,7 @@ export default function QuizTopics() {
               <Image
                 width={64}
                 height={64}
-                src={specialQuiz.image}
+                src={`https://placehold.co/300x300.png?text=${specialQuiz.id}`}
                 alt="Special Quiz"
                 className="w-24 h-24 rounded-full border-4 border-white shadow-lg mb-4 object-cover"
               />
@@ -146,7 +146,7 @@ export default function QuizTopics() {
                 <Image
                   width={64}
                   height={64}
-                  src={quiz.image}
+                  src={`https://placehold.co/300x300.png?text=${quiz.topic}`}
                   alt={quiz.title}
                   className="w-16 h-16 rounded-md object-cover border border-gray-300"
                 />

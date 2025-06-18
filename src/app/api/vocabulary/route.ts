@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase";
 
 export async function GET(req: NextRequest) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { searchParams } = new URL(req.url);
   const unitId = searchParams.get("unit_id");
   let query = supabase.from("vocabulary").select("*");

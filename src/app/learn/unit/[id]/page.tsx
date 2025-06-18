@@ -85,7 +85,7 @@ export default function FlashcardPage() {
     setIsFlipped(false);
   };
 
-  const setCardStatus = async  (newStatus: Exclude<StatusType, null>) => {
+  const setCardStatus = async (newStatus: Exclude<StatusType, null>) => {
     const updated = [...statuses];
     updated[index] = newStatus;
     setStatuses(updated);
@@ -183,7 +183,7 @@ export default function FlashcardPage() {
               <Image
                 width={200}
                 height={200}
-                src={current.image_url}
+                src={`https://placehold.co/300x300.png?text=${current.word}`}
                 alt={current.word}
                 className="w-48 h-48 object-cover rounded-lg mb-4"
               />

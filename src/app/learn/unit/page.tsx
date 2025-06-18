@@ -23,7 +23,6 @@ export default function BookUnits() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 4;
-
   // Fetch data from API
   useEffect(() => {
     const fetchUnits = async () => {
@@ -47,11 +46,10 @@ export default function BookUnits() {
   }, []);
 
   const filteredUnits = units.filter((unit) => {
-    const matchType = filterType === "Tất cả" || unit.type === filterType;
+    const matchType = filterType === "Tất cả" || unit.topic === filterType;
     const matchStatus = hideLearned ? unit.status !== "Đã học" : true;
     return matchType && matchStatus;
   });
-
   const totalPages = Math.ceil(filteredUnits.length / itemsPerPage);
   const paginatedUnits = filteredUnits.slice(
     (currentPage - 1) * itemsPerPage,
@@ -141,7 +139,7 @@ export default function BookUnits() {
                       <Image
                         width={96}
                         height={96}
-                        src={unit.image}
+                        src={`https://placehold.co/300x300.png?text=${unit.type}`}
                         alt={unit.title}
                         className="w-full h-full object-cover"
                       />
