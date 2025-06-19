@@ -2,7 +2,7 @@ import React from "react";
 
 export default function RightMenu() {
   return (
-    <aside className="col-span-12 pt-5  md:col-span-3">
+    <aside className="col-span-12  md:col-span-3">
       {/* điểm thưởng góc phải */}
      
       <div className="space-y-6">

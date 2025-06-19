@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase";
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient(); // ✅ Bây giờ đây là async
+  const supabase = await createSupabaseServerClient(); 
   const { data, error } = await supabase.from("unit").select("*");
 
   if (error)

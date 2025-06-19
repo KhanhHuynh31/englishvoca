@@ -5,6 +5,7 @@ import Pagination from "@/components/Pagination/Pagination";
 import { useEffect, useState } from "react";
 import { clearVocabHistory, updateVocabStatus } from "@/lib/vocabularyDB";
 import { useGetIndexDB, Word } from "@/components/hooks/useGetIndexDB";
+import Link from "next/link";
 
 type StatusType = "known" | "new" | "hard";
 
@@ -70,12 +71,12 @@ const WordBook = () => {
                 {allWords.length} từ
               </div>
             </div>
-            <button
-              onClick={() => alert("Bắt đầu ôn tập")}
+            <Link
+              href={"/wordbook/quiz"}
               className="px-4 py-1.5 text-white font-semibold rounded-full bg-gradient-to-r from-orange-400 to-pink-400 hover:scale-105 transition-transform duration-300"
             >
               🧠 Ôn tập
-            </button>
+            </Link>
           </div>
           <button
             onClick={async () => {
@@ -157,7 +158,6 @@ const WordBook = () => {
             </div>
           </div>
         </div>
-
         {paginatedWords.length === 0 ? (
           <div className="w-full py-16 text-center">
             <div className="text-6xl mb-4 animate-[bookFloat_3s_ease-in-out_infinite]">
@@ -253,8 +253,9 @@ const WordBook = () => {
             })}
           </div>
         )}
-
-        <Pagination totalPages={totalPages} page={page} setPage={setPage} />
+        {totalPages > 1 && (
+          <Pagination totalPages={totalPages} page={page} setPage={setPage} />
+        )}
       </div>
     </div>
   );

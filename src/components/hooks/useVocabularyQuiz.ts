@@ -107,7 +107,7 @@ export const useVocabularyQuiz = () => {
     }
 
     generateQuestions();
-  }, [generateQuestions]);
+  }, [vocabData, generateQuestions]);
 
   const getWrongQuestionObjects = (): QuizQuestion[] => {
     const wrong = getWrongAnswers();
