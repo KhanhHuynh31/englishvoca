@@ -1,5 +1,4 @@
 import "@/styles/globals.css";
-import { inter } from "@/app/ui/fonts";
 import NavMenu from "@/components/NavMenu/NavMenu";
 import RightMenu from "@/components/RightMenu/RightMenu";
 import HeaderMenu from "@/components/HeaderMenu/HeaderMenu";
@@ -11,7 +10,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased`}>
+      <body>
         <div className="min-h-screen bg-gray-50 font-sans md:pl-48 lg:pl-64">
           <NavMenu />
           <div className="py-6 px-4 flex flex-wrap lg:flex-nowrap gap-4">

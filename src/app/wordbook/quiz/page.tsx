@@ -1,47 +1,173 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import Listening from "@/components/Listening/Listening";
 import Image from "next/image";
+import Listening from "@/components/Listening/Listening";
 import { useVocabularyQuiz } from "@/components/hooks/useVocabularyQuiz";
 
+// Types for better type safety
+interface QuizState {
+  index: number;
+  score: number;
+  selected: string | null;
+  finished: boolean;
+  showHint: boolean;
+  showOnlyWrong: boolean;
+  isProcessing: boolean;
+  error: string | null;
+}
+
+const INITIAL_QUIZ_STATE: QuizState = {
+  index: 0,
+  score: 0,
+  selected: null,
+  finished: false,
+  showHint: false,
+  showOnlyWrong: false,
+  isProcessing: false,
+  error: null,
+};
+
+const ANSWER_DELAY = 1000;
+const MIN_QUESTIONS_REQUIRED = 4;
+
 export default function VocabularyQuiz() {
-  const [index, setIndex] = useState(0);
-  const [score, setScore] = useState(0);
-  const [selected, setSelected] = useState<string | null>(null);
-  const [finished, setFinished] = useState(false);
-  const [showHint, setShowHint] = useState(false);
-  const [showOnlyWrong, setShowOnlyWrong] = useState(false);
+  const [quizState, setQuizState] = useState<QuizState>(INITIAL_QUIZ_STATE);
+
   const {
     questions,
     setQuestions,
     updateWrongAnswers,
     getWrongQuestionObjects,
   } = useVocabularyQuiz();
-  const current = questions[index];
 
-  const handleAnswer = (answer: string) => {
-    if (selected) return;
-    setSelected(answer);
-    const isCorrect = answer === current.correct;
-    setScore((prev) => prev + (isCorrect ? 1 : 0));
-    updateWrongAnswers(current.word, isCorrect);
+  const currentQuestion = useMemo(
+    () => questions[quizState.index],
+    [questions, quizState.index]
+  );
+  const wrongQuestions = useMemo(
+    () => getWrongQuestionObjects(),
+    [getWrongQuestionObjects]
+  );
+  const hasWrongQuestions = wrongQuestions.length > 1;
 
-    setTimeout(() => {
-      if (index + 1 >= questions.length) {
-        setFinished(true);
-      } else {
-        setIndex(index + 1);
-        setSelected(null);
-        setShowHint(false);
+  // Async function to handle answer processing
+  const processAnswer = useCallback(
+    async (answer: string): Promise<void> => {
+      if (!currentQuestion) {
+        console.error("No current question available");
+        return;
       }
-    }, 1200);
-  };
 
-  if (questions.length < 4 && !showOnlyWrong) {
+      try {
+        const isCorrect = answer === currentQuestion.correct;
+
+        // Update wrong answers tracking
+        updateWrongAnswers(currentQuestion.word, isCorrect);
+
+        // Update quiz state
+        setQuizState((prev) => ({
+          ...prev,
+          score: prev.score + (isCorrect ? 1 : 0),
+          selected: answer,
+          isProcessing: true,
+          error: null,
+        }));
+
+        // Wait for visual feedback before proceeding
+        await new Promise((resolve) => setTimeout(resolve, ANSWER_DELAY));
+
+        // Move to next question or finish quiz
+        setQuizState((prev) => {
+          const isLastQuestion = prev.index + 1 >= questions.length;
+
+          return {
+            ...prev,
+            index: isLastQuestion ? prev.index : prev.index + 1,
+            selected: null,
+            showHint: false,
+            finished: isLastQuestion,
+            isProcessing: false,
+          };
+        });
+      } catch (error) {
+        console.error("Error processing answer:", error);
+        setQuizState((prev) => ({
+          ...prev,
+          error: "Có lỗi xảy ra khi xử lý câu trả lời. Vui lòng thử lại.",
+          isProcessing: false,
+        }));
+      }
+    },
+    [currentQuestion, questions.length, updateWrongAnswers]
+  );
+
+  // Handle answer selection
+  const handleAnswerSelect = useCallback(
+    async (answer: string): Promise<void> => {
+      if (quizState.selected || quizState.isProcessing) return;
+
+      await processAnswer(answer);
+    },
+    [quizState.selected, quizState.isProcessing, processAnswer]
+  );
+
+  // Handle "I don't know" button
+  const handleDontKnow = useCallback(async (): Promise<void> => {
+    if (quizState.selected || quizState.isProcessing) return;
+
+    await processAnswer("Không biết");
+  }, [quizState.selected, quizState.isProcessing, processAnswer]);
+
+  // Reset quiz to initial state
+  const resetQuiz = useCallback((): void => {
+    setQuizState(INITIAL_QUIZ_STATE);
+  }, []);
+
+  // Start wrong questions quiz
+  const startWrongQuestionsQuiz = useCallback((): void => {
+    try {
+      if (wrongQuestions.length === 0) {
+        console.warn("No wrong questions available");
+        return;
+      }
+
+      setQuestions(wrongQuestions);
+      setQuizState({
+        ...INITIAL_QUIZ_STATE,
+        showOnlyWrong: true,
+      });
+    } catch (error) {
+      console.error("Error starting wrong questions quiz:", error);
+      setQuizState((prev) => ({
+        ...prev,
+        error: "Không thể bắt đầu luyện tập câu sai. Vui lòng thử lại.",
+      }));
+    }
+  }, [wrongQuestions, setQuestions]);
+
+  // Toggle hint visibility
+  const toggleHint = useCallback((): void => {
+    setQuizState((prev) => ({
+      ...prev,
+      showHint: !prev.showHint,
+    }));
+  }, []);
+
+  // Clear error
+  const clearError = useCallback((): void => {
+    setQuizState((prev) => ({
+      ...prev,
+      error: null,
+    }));
+  }, []);
+
+  // Render insufficient questions message
+  if (questions.length < MIN_QUESTIONS_REQUIRED && !quizState.showOnlyWrong) {
     return (
       <div className="p-6 text-center text-lg text-gray-600">
-        ⚠️ Bạn cần học thêm ít nhất 4 từ để bắt đầu luyện tập.
+        ⚠️ Bạn cần học thêm ít nhất {MIN_QUESTIONS_REQUIRED} từ để bắt đầu luyện
+        tập.
         <br />
         <Link
           href="/unit"
@@ -53,51 +179,54 @@ export default function VocabularyQuiz() {
     );
   }
 
-  if (finished) {
+  // Render completion screen
+  if (quizState.finished) {
     return (
       <div className="text-center space-y-4 p-6">
-        {showOnlyWrong && (
+        {quizState.showOnlyWrong && (
           <p className="text-sm text-yellow-600">
             🔁 Bạn đã hoàn thành luyện lại các câu đã trả lời sai
           </p>
         )}
+
         <h2 className="text-3xl font-bold text-green-600">🎉 Hoàn thành!</h2>
+
         <p>
-          Bạn trả lời đúng <strong>{score}</strong>/{questions.length} câu.
+          Bạn trả lời đúng <strong>{quizState.score}</strong>/{questions.length}{" "}
+          câu.
         </p>
-        <div className="flex justify-center gap-4">
+
+        {quizState.error && (
+          <div className="p-3 bg-red-100 border border-red-300 rounded text-red-700">
+            {quizState.error}
+            <button
+              onClick={clearError}
+              className="ml-2 text-sm underline hover:no-underline"
+            >
+              Đóng
+            </button>
+          </div>
+        )}
+
+        <div className="flex justify-center gap-4 flex-wrap">
           <button
-            onClick={() => {
-              setIndex(0);
-              setScore(0);
-              setSelected(null);
-              setFinished(false);
-              setShowHint(false);
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            onClick={resetQuiz}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
           >
             🔁 Làm lại
           </button>
-          {getWrongQuestionObjects().length > 1 && (
+
+          {hasWrongQuestions && (
             <button
-              onClick={() => {
-                const wrongQuestions = getWrongQuestionObjects();
-                setQuestions(wrongQuestions);
-                setIndex(0);
-                setScore(0);
-                setSelected(null);
-                setFinished(false);
-                setShowHint(false);
-                setShowOnlyWrong(true);
-              }}
-              className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+              onClick={startWrongQuestionsQuiz}
+              className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 transition-colors"
             >
               🔁 Làm lại câu sai
             </button>
           )}
 
           <Link href="/unit">
-            <span className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 cursor-pointer">
+            <span className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 cursor-pointer transition-colors inline-block">
               📚 Học thêm từ mới
             </span>
           </Link>
@@ -106,82 +235,116 @@ export default function VocabularyQuiz() {
     );
   }
 
+  // Render quiz interface
   return (
     <div className="max-w-6xl mx-auto p-4 flex flex-col gap-6">
+      {/* Progress bar */}
       <div>
         <div className="text-sm text-gray-600 mb-1 flex justify-between">
           <span>Tiến độ</span>
           <span>
-            Câu {index + 1} / {questions.length}
+            Câu {quizState.index + 1} / {questions.length}
           </span>
         </div>
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-blue-500"
-            style={{ width: `${((index + 1) / questions.length) * 100}%` }}
+            className="h-full bg-blue-500 transition-all duration-300"
+            style={{
+              width: `${((quizState.index + 1) / questions.length) * 100}%`,
+            }}
           />
         </div>
       </div>
 
+      {/* Error display */}
+      {quizState.error && (
+        <div className="p-3 bg-red-100 border border-red-300 rounded text-red-700">
+          {quizState.error}
+          <button
+            onClick={clearError}
+            className="ml-2 text-sm underline hover:no-underline"
+          >
+            Đóng
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col md:flex-row gap-6">
+        {/* Question section */}
         <div className="flex-1 space-y-4">
           <div className="text-3xl font-bold text-blue-700 text-center">
             <div className="flex items-center justify-center gap-2">
-              {current.word}
+              {currentQuestion?.word}
             </div>
-            <span className="text-xl text-gray-500">{current.phonetic}</span>
-            <Listening word={current.word} />
+            <span className="text-xl text-gray-500">
+              {currentQuestion?.phonetic}
+            </span>
+            {currentQuestion && <Listening word={currentQuestion.word} />}
           </div>
 
+          {/* Answer options */}
           <div className="grid grid-cols-2 gap-4">
-            {current.options.map((opt) => (
+            {currentQuestion?.options.map((option) => (
               <button
-                key={opt}
-                onClick={() => handleAnswer(opt)}
-                disabled={!!selected}
-                className={`p-4 rounded-xl font-semibold transition
+                key={option}
+                onClick={() => handleAnswerSelect(option)}
+                disabled={!!quizState.selected || quizState.isProcessing}
+                className={`p-4 rounded-xl font-semibold transition-all duration-200
                   ${
-                    selected
-                      ? opt === current.correct
+                    quizState.selected
+                      ? option === currentQuestion.correct
                         ? "bg-green-100 border border-green-500 text-green-700"
-                        : opt === selected
+                        : option === quizState.selected
                         ? "bg-red-100 border border-red-500 text-red-700"
                         : "bg-white border border-gray-300"
-                      : "hover:bg-blue-100 border border-gray-300"
+                      : quizState.isProcessing
+                      ? "bg-gray-100 border border-gray-300 cursor-not-allowed"
+                      : "hover:bg-blue-100 border border-gray-300 cursor-pointer"
                   }`}
               >
-                {opt}
+                {option}
               </button>
             ))}
           </div>
 
+          {/* Controls */}
           <div className="flex justify-between items-center pt-2">
-            <label className="text-sm flex items-center gap-2">
+            <label className="text-sm flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={showHint}
-                onChange={() => setShowHint((prev) => !prev)}
+                checked={quizState.showHint}
+                onChange={toggleHint}
+                disabled={quizState.isProcessing}
               />
               💡 Hiện hình minh hoạ
             </label>
+
             <button
-              onClick={() => handleAnswer("Không biết")}
-              disabled={!!selected}
-              className="text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300"
+              onClick={handleDontKnow}
+              disabled={!!quizState.selected || quizState.isProcessing}
+              className="text-sm bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               ❓ Không biết
             </button>
           </div>
         </div>
 
+        {/* Hint section */}
         <div className="flex-1 flex items-center justify-center min-h-[250px]">
-          {showHint ? (
+          {quizState.showHint && currentQuestion ? (
             <Image
-              src={`https://placehold.co/300x300.png?text=${current.word}`}
+              src={`https://placehold.co/300x300.png?text=${currentQuestion.word}`}
               width={300}
               height={300}
-              alt={current.word}
+              alt={currentQuestion.word}
               className="rounded shadow-lg"
+              onError={() => {
+                console.error(
+                  "Failed to load hint image for:",
+                  currentQuestion.word
+                );
+                // You could set a fallback image here
+              }}
             />
           ) : (
             <div className="text-gray-400 italic text-center px-4">
