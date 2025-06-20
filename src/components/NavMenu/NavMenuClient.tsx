@@ -10,6 +10,13 @@ type NavMenuClientProps = {
   isLoggedIn: boolean;
 };
 
+type MenuItem = {
+  href: string;
+  icon: string;
+  label: string;
+  onClick?: () => void;
+};
+
 export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -18,21 +25,18 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
   const handleLogout = () => {
     startTransition(async () => {
       await signOutAction();
-      location.reload(); // Làm mới lại giao diện sau khi đăng xuất
+      location.reload();
     });
   };
 
-  const baseMenuItems = [
+  const menuItems: MenuItem[] = [
     { href: "/learn/unit", icon: "📚", label: "Học từ mới" },
     { href: "/wordbook", icon: "🎯", label: "Sổ từ của tôi" },
     { href: "/profile", icon: "👤", label: "Hồ sơ" },
+    isLoggedIn
+      ? { href: "#", icon: "🚪", label: isPending ? "Đang đăng xuất..." : "Đăng xuất", onClick: handleLogout }
+      : { href: "/account", icon: "🔑", label: "Đăng nhập" },
   ];
-
-  const authMenuItem = isLoggedIn
-    ? { href: "#", icon: "🚪", label: "Đăng xuất", onClick: handleLogout }
-    : { href: "/account", icon: "🔑", label: "Đăng nhập" };
-
-  const menuItems = [...baseMenuItems, authMenuItem];
 
   const handleCloseMobileMenu = useCallback(() => {
     setIsMobileOpen(false);
@@ -44,11 +48,53 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
   const inactiveLinkClasses =
     "text-gray-700 hover:bg-gray-100 hover:text-blue-500";
 
+  const renderMenuItem = (item: MenuItem, isMobile = false) => {
+    const isActive = pathname === item.href;
+
+    const content = (
+      <>
+        <span className="text-xl">{item.icon}</span>
+        <span>{item.label}</span>
+      </>
+    );
+
+    const className = clsx(
+      commonLinkClasses,
+      isActive ? activeLinkClasses : inactiveLinkClasses,
+      "w-full text-left"
+    );
+
+    return (
+      <li key={item.href}>
+        {item.onClick ? (
+          <button
+            onClick={() => {
+              item.onClick?.();
+              if (isMobile) handleCloseMobileMenu();
+            }}
+            className={className}
+            disabled={isPending}
+          >
+            {content}
+          </button>
+        ) : (
+          <Link
+            href={item.href}
+            onClick={isMobile ? handleCloseMobileMenu : undefined}
+            className={className}
+          >
+            {content}
+          </Link>
+        )}
+      </li>
+    );
+  };
+
   return (
     <>
       {/* Nút mở menu mobile */}
       <button
-        className="fixed top-4 left-4 z-30 p-2 rounded-md bg-white shadow-md md:hidden focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200 hover:scale-105"
+        className="fixed top-4 left-4 z-30 p-2 rounded-md bg-white shadow-md md:hidden focus:outline-none focus:ring-2 focus:ring-blue-500 transition-transform hover:scale-105"
         onClick={() => setIsMobileOpen(true)}
         aria-label="Mở menu"
       >
@@ -75,7 +121,7 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
           <Link
             href="/"
             onClick={handleCloseMobileMenu}
-            className="text-2xl font-bold text-green-600 hover:text-green-700 transition-colors duration-200"
+            className="text-2xl font-bold text-green-600 hover:text-green-700"
             aria-label="Trang chủ Flash Vocab"
           >
             Flash Vocab
@@ -83,48 +129,14 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
           <button
             onClick={handleCloseMobileMenu}
             aria-label="Đóng menu"
-            className="p-1 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="p-1 rounded-full hover:bg-gray-100 focus:ring-2 focus:ring-blue-500"
           >
-            <span className="text-2xl text-gray-600 hover:text-gray-900">✖</span>
+            <span className="text-2xl text-gray-600">✖</span>
           </button>
         </div>
         <nav>
           <ul className="space-y-3 text-base">
-            {menuItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <li key={item.href}>
-                  {item.onClick ? (
-                    <button
-                      onClick={() => {
-                        item.onClick?.();
-                        handleCloseMobileMenu();
-                      }}
-                      className={clsx(
-                        commonLinkClasses,
-                        inactiveLinkClasses,
-                        "w-full text-left"
-                      )}
-                    >
-                      <span className="text-xl">{item.icon}</span>
-                      <span>{item.label}</span>
-                    </button>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      onClick={handleCloseMobileMenu}
-                      className={clsx(
-                        commonLinkClasses,
-                        isActive ? activeLinkClasses : inactiveLinkClasses
-                      )}
-                    >
-                      <span className="text-xl">{item.icon}</span>
-                      <span>{item.label}</span>
-                    </Link>
-                  )}
-                </li>
-              );
-            })}
+            {menuItems.map((item) => renderMenuItem(item, true))}
           </ul>
         </nav>
       </aside>
@@ -134,43 +146,13 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
         <header className="mb-8 border-b border-gray-200 pb-4">
           <Link
             href="/"
-            className="text-3xl font-bold text-green-600 hover:text-green-700 transition-colors duration-200"
+            className="text-3xl font-bold text-green-600 hover:text-green-700"
           >
             Flash Vocab
           </Link>
         </header>
         <ul className="space-y-3 text-base flex-grow">
-          {menuItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <li key={item.href}>
-                {item.onClick ? (
-                  <button
-                    onClick={item.onClick}
-                    className={clsx(
-                      commonLinkClasses,
-                      inactiveLinkClasses,
-                      "w-full text-left"
-                    )}
-                  >
-                    <span className="text-xl">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </button>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className={clsx(
-                      commonLinkClasses,
-                      isActive ? activeLinkClasses : inactiveLinkClasses
-                    )}
-                  >
-                    <span className="text-xl">{item.icon}</span>
-                    <span>{item.label}</span>
-                  </Link>
-                )}
-              </li>
-            );
-          })}
+          {menuItems.map((item) => renderMenuItem(item))}
         </ul>
       </nav>
     </>
