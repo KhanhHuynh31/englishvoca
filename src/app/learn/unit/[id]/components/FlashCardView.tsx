@@ -1,4 +1,3 @@
-// ✅ File: app/learn/unit/[id]/components/FlashcardView.tsx
 "use client";
 
 import Image from "next/image";
@@ -86,6 +85,21 @@ const FlashcardView = memo(
         ? "animate-slide-out-left"
         : "animate-slide-out-right"
       : "animate-fade-in";
+    function parseFakeArrayString(
+      input: string | string[] | null | undefined
+    ): string[] {
+      if (!input) return [];
+      if (Array.isArray(input)) return input;
+
+      // Chuyển ' sang " rồi parse
+      try {
+        const fixed = input.replace(/'/g, '"'); // → JSON hợp lệ
+        return JSON.parse(fixed);
+      } catch (err) {
+        console.warn("Parse error:", err);
+        return [];
+      }
+    }
 
     return (
       <div className="flex flex-col items-center w-full max-w-2xl mx-auto p-4">
@@ -98,7 +112,9 @@ const FlashcardView = memo(
         </div>
 
         {/* Card Container */}
-        <div className={`w-full max-w-md h-[500px] [perspective:1000px] mb-4 ${animationClass}`}>
+        <div
+          className={`w-full max-w-md h-[500px] [perspective:1000px] mb-4 ${animationClass}`}
+        >
           <div
             className={`relative w-full h-full transition-transform duration-700 [transform-style:preserve-3d] ${
               isFlipped ? "[transform:rotateY(180deg)]" : ""
@@ -130,7 +146,9 @@ const FlashcardView = memo(
                     onClick={(e) => handleStatusClick(e, key as StatusType)}
                     disabled={isTransitioning}
                     className={`text-sm px-4 py-2 rounded-full font-semibold transition ${
-                      isTransitioning ? "cursor-wait opacity-50" : "hover:scale-105"
+                      isTransitioning
+                        ? "cursor-wait opacity-50"
+                        : "hover:scale-105"
                     } ${
                       status === key
                         ? STATUS_MAP[key as StatusType].className
@@ -147,11 +165,41 @@ const FlashcardView = memo(
             <div
               className={`absolute w-full h-full [transform:rotateY(180deg)] backface-hidden p-6 rounded-2xl shadow-lg overflow-y-auto cursor-pointer ${cardColorClass}`}
             >
-              <h3 className="text-xl font-bold text-blue-700">📖 {card.meaning}</h3>
-              <p className="text-gray-600 mt-2">"{card.example}"</p>
+              <h3 className="text-xl font-bold text-blue-700 text-center">
+                {card.word}
+              </h3>
               <div className="w-full h-[1px] bg-gray-200 my-3" />
+              <h4 className="font-semibold text-gray-800">Dịch nghĩa:</h4>
+              <p className="text-gray-600 mt-2">{card.meaning}</p>
               <h4 className="font-semibold text-gray-800">Định nghĩa:</h4>
               <p className="text-sm text-gray-600">{card.definition}</p>
+              {parseFakeArrayString(card.example).length > 0 && (
+                <>
+                  <h4 className="font-semibold text-gray-800 mt-3">Ví dụ:</h4>
+                  <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                    {parseFakeArrayString(card.example).map((ex, idx) => (
+                      <li key={idx}>{ex}</li>
+                    ))}
+                  </ul>
+                </>
+              )}
+              {parseFakeArrayString(card.synonyms).length > 0 && (
+                <>
+                  <h4 className="font-semibold text-gray-800 mt-3">
+                    Từ đồng nghĩa:
+                  </h4>
+                  <div className="flex flex-wrap gap-2 mt-1">
+                    {parseFakeArrayString(card.synonyms).map((syn, idx) => (
+                      <span
+                        key={idx}
+                        className="px-3 py-1 text-sm bg-gray-200 text-gray-800 rounded-sm"
+                      >
+                        {syn}
+                      </span>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
