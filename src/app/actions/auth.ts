@@ -89,3 +89,7 @@ export async function signUpAction(formData: FormData) {
 
   return { success: true };
 }
+export async function signOutAction() {
+  const supabase = await createSupabaseServerClient();
+  await supabase.auth.signOut();
+}
