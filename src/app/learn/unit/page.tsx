@@ -1,5 +1,5 @@
 // app/learn/unit/page.tsx
-import { createSupabaseServerClient } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import BookUnitsClient from "./BookUnitsClient";
 
 export const revalidate = 60;

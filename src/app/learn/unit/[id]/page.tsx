@@ -1,5 +1,5 @@
 import FlashcardClient from "./FlashCarrdClient";
-import { createSupabaseServerClient } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 

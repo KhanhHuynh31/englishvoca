@@ -12,9 +12,9 @@ export async function createSupabaseServerClient() {
         getAll() {
           return cookieStore.getAll();
         },
-        setAll() {
-        }
-      }
+        setAll() {},
+      },
     }
   );
 }
+

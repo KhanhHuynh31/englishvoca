@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { signInAction, signUpAction } from "@/app/actions/auth";
+import toast, { Toaster } from "react-hot-toast"; // Import toast and Toaster
 
 const LoginPage = () => {
   const [isRegister, setIsRegister] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,31 +23,27 @@ const LoginPage = () => {
     }
   };
 
-  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-      closePopup();
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setErrorMsg(null);
     const formData = new FormData(e.currentTarget);
 
     startTransition(async () => {
       const action = isRegister ? signUpAction : signInAction;
       const result = await action(formData);
+
       if (result && !result.success) {
-        setErrorMsg(result.message || "Đã xảy ra lỗi.");
+        toast.error(result.message || "Đã xảy ra lỗi."); // Show error toast
+      } else if (result && result.success) {
+        toast.success(
+          isRegister ? "Đăng ký thành công!" : "Đăng nhập thành công!"
+        );
+        setTimeout(() => closePopup(), 1000);
       }
     });
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={handleOverlayClick}
-    >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div
         ref={modalRef}
         className="relative bg-[#2D333B] text-gray-100 w-full max-w-md rounded-xl shadow-2xl p-8 mx-4"
@@ -56,6 +53,7 @@ const LoginPage = () => {
           <button
             onClick={closePopup}
             className="text-gray-400 hover:text-white text-2xl font-bold"
+            aria-label="Close popup"
           >
             &times;
           </button>
@@ -73,13 +71,10 @@ const LoginPage = () => {
         </h1>
 
         {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4"
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             name="email"
-            type="text"
+            type="email" // Changed to type="email" for better validation
             placeholder="Email"
             required
             className="w-full p-3 rounded-md bg-[#3B424A] border border-[#4B525B] focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
@@ -103,22 +98,28 @@ const LoginPage = () => {
           </div>
           {isRegister && (
             <input
+              name="confirmPassword" // Added name for confirmation password
               type="password"
               placeholder="Nhập lại mật khẩu"
+              required // Made required for registration
               className="w-full p-3 rounded-md bg-[#3B424A] border border-[#4B525B] focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
-              disabled
+              // Removed disabled, validation will be handled in action if needed
             />
           )}
           <button
             type="submit"
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-md transition duration-200 text-lg"
+            disabled={isPending} // Disable button while pending
           >
-            {isRegister ? "TẠO TÀI KHOẢN" : "ĐĂNG NHẬP"}
+            {isPending
+              ? "Đang xử lý..."
+              : isRegister
+              ? "TẠO TÀI KHOẢN"
+              : "ĐĂNG NHẬP"}
           </button>
         </form>
-        {errorMsg && (
-          <div className="text-red-500 text-center text-sm">{errorMsg}</div>
-        )}
+
+        {/* Removed existing errorMsg display */}
 
         {!isRegister && (
           <>
@@ -145,12 +146,16 @@ const LoginPage = () => {
 
         {/* Disclaimers */}
         <p className="text-gray-400 text-xs text-center mt-8 leading-relaxed px-2">
-          Khi đăng ký bạn đã đồng ý với Các chính sách và Chính sách bảo mật của chúng tôi.
+          Khi đăng ký bạn đã đồng ý với Các chính sách và Chính sách bảo mật của
+          chúng tôi.
         </p>
         <p className="text-gray-400 text-xs text-center mt-2 leading-relaxed px-2">
-          Trang này được bảo vệ bởi reCAPTCHA và theo Chính sách bảo mật và Điều khoản dịch vụ của Google.
+          Trang này được bảo vệ bởi reCAPTCHA và theo Chính sách bảo mật và Điều
+          khoản dịch vụ của Google.
         </p>
       </div>
+      <Toaster position="top-center" reverseOrder={false} />{" "}
+      {/* Add Toaster component */}
     </div>
   );
 };
