@@ -48,7 +48,10 @@ export async function signUpAction(formData: FormData) {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+  });
 
   if (authError) {
     if (authError.message.includes("User already registered")) {
@@ -59,15 +62,15 @@ export async function signUpAction(formData: FormData) {
 
   // --- Bắt đầu thêm dữ liệu vào bảng user_profiles ---
   if (authData.user) {
-    const { data: profileData, error: profileError } = await supabase
-      .from('user_profiles')
+    const { error: profileError } = await supabase
+      .from("user_profiles")
       .insert([
         {
           user_id: authData.user.id, // ID của người dùng từ Supabase Auth
-          username: email.split('@')[0], // Tên người dùng mặc định từ email
+          username: email.split("@")[0], // Tên người dùng mặc định từ email
           // avatar_url: 'default_avatar.png', // Tùy chọn: Thêm avatar mặc định
           // bio: 'Xin chào! Tôi là người dùng mới.', // Tùy chọn: Thêm bio mặc định
-        }
+        },
       ]);
 
     if (profileError) {
@@ -75,7 +78,11 @@ export async function signUpAction(formData: FormData) {
       // nếu việc tạo profile thất bại để tránh dữ liệu không nhất quán.
       console.error("Lỗi khi tạo user profile:", profileError);
       // await supabase.auth.admin.deleteUser(authData.user.id); // Cần Supabase Admin client để xóa
-      return { success: false, message: "Đăng ký thành công nhưng không thể tạo hồ sơ người dùng. Vui lòng liên hệ hỗ trợ." };
+      return {
+        success: false,
+        message:
+          "Đăng ký thành công nhưng không thể tạo hồ sơ người dùng. Vui lòng liên hệ hỗ trợ.",
+      };
     }
   }
   // --- Kết thúc thêm dữ liệu vào bảng user_profiles ---
