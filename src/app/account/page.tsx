@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { signInAction, signUpAction } from "@/app/actions/auth";
-import toast, { Toaster } from "react-hot-toast"; // Import toast and Toaster
+import toast, { Toaster } from "react-hot-toast";
 
 const LoginPage = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -32,7 +32,7 @@ const LoginPage = () => {
       const result = await action(formData);
 
       if (result && !result.success) {
-        toast.error(result.message || "Đã xảy ra lỗi."); // Show error toast
+        toast.error(result.message || "Đã xảy ra lỗi.");
       } else if (result && result.success) {
         toast.success(
           isRegister ? "Đăng ký thành công!" : "Đăng nhập thành công!"
@@ -74,7 +74,7 @@ const LoginPage = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             name="email"
-            type="email" // Changed to type="email" for better validation
+            type="email"
             placeholder="Email"
             required
             className="w-full p-3 rounded-md bg-[#3B424A] border border-[#4B525B] focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
@@ -98,18 +98,17 @@ const LoginPage = () => {
           </div>
           {isRegister && (
             <input
-              name="confirmPassword" // Added name for confirmation password
+              name="confirmPassword"
               type="password"
               placeholder="Nhập lại mật khẩu"
-              required // Made required for registration
+              required
               className="w-full p-3 rounded-md bg-[#3B424A] border border-[#4B525B] focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
-              // Removed disabled, validation will be handled in action if needed
             />
           )}
           <button
             type="submit"
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-md transition duration-200 text-lg"
-            disabled={isPending} // Disable button while pending
+            disabled={isPending}
           >
             {isPending
               ? "Đang xử lý..."
@@ -118,8 +117,6 @@ const LoginPage = () => {
               : "ĐĂNG NHẬP"}
           </button>
         </form>
-
-        {/* Removed existing errorMsg display */}
 
         {!isRegister && (
           <>
@@ -154,8 +151,7 @@ const LoginPage = () => {
           khoản dịch vụ của Google.
         </p>
       </div>
-      <Toaster position="top-center" reverseOrder={false} />{" "}
-      {/* Add Toaster component */}
+      <Toaster position="top-center" reverseOrder={false} />
     </div>
   );
 };
