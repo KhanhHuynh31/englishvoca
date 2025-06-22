@@ -4,6 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import clsx from "clsx";
 import { useState, useCallback, useTransition } from "react";
+import {
+  BookOpenCheck,
+  BookMarked,
+  User,
+  LogOut,
+  LogIn,
+  Menu,
+  X,
+} from "lucide-react";
 import { signOutAction } from "@/app/actions/auth";
 
 type NavMenuClientProps = {
@@ -12,7 +21,7 @@ type NavMenuClientProps = {
 
 type MenuItem = {
   href: string;
-  icon: string;
+  icon: React.ElementType;
   label: string;
   onClick?: () => void;
 };
@@ -30,12 +39,17 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
   };
 
   const menuItems: MenuItem[] = [
-    { href: "/learn/unit", icon: "📚", label: "Học từ mới" },
-    { href: "/wordbook", icon: "🎯", label: "Sổ từ của tôi" },
-    { href: "/profile", icon: "👤", label: "Hồ sơ" },
+    { href: "/learn/unit", icon: BookOpenCheck, label: "Học từ mới" },
+    { href: "/wordbook", icon: BookMarked, label: "Sổ từ của tôi" },
+    { href: "/profile", icon: User, label: "Hồ sơ" },
     isLoggedIn
-      ? { href: "#", icon: "🚪", label: isPending ? "Đang đăng xuất..." : "Đăng xuất", onClick: handleLogout }
-      : { href: "/account", icon: "🔑", label: "Đăng nhập" },
+      ? {
+          href: "#",
+          icon: LogOut,
+          label: isPending ? "Đang đăng xuất..." : "Đăng xuất",
+          onClick: handleLogout,
+        }
+      : { href: "/account", icon: LogIn, label: "Đăng nhập" },
   ];
 
   const handleCloseMobileMenu = useCallback(() => {
@@ -50,18 +64,19 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
 
   const renderMenuItem = (item: MenuItem, isMobile = false) => {
     const isActive = pathname === item.href;
-
-    const content = (
-      <>
-        <span className="text-xl">{item.icon}</span>
-        <span>{item.label}</span>
-      </>
-    );
+    const Icon = item.icon;
 
     const className = clsx(
       commonLinkClasses,
       isActive ? activeLinkClasses : inactiveLinkClasses,
       "w-full text-left"
+    );
+
+    const content = (
+      <>
+        <Icon className="w-5 h-5 shrink-0" />
+        <span>{item.label}</span>
+      </>
     );
 
     return (
@@ -92,16 +107,16 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
 
   return (
     <>
-      {/* Nút mở menu mobile */}
+      {/* Mobile button */}
       <button
         className="fixed top-4 left-4 z-30 p-2 rounded-md bg-white shadow-md md:hidden focus:outline-none focus:ring-2 focus:ring-blue-500 transition-transform hover:scale-105"
         onClick={() => setIsMobileOpen(true)}
         aria-label="Mở menu"
       >
-        <span className="text-2xl">☰</span>
+        <Menu className="w-6 h-6 text-gray-800" />
       </button>
 
-      {/* Overlay nền mờ khi mở menu mobile */}
+      {/* Overlay */}
       {isMobileOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-40 z-20 md:hidden animate-fade-in"
@@ -110,7 +125,7 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
         />
       )}
 
-      {/* Menu mobile */}
+      {/* Mobile sidebar */}
       <aside
         className={clsx(
           "fixed top-0 left-0 h-screen w-64 bg-white shadow-lg px-6 py-8 z-30 transform transition-transform duration-300 ease-in-out md:hidden",
@@ -131,17 +146,15 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
             aria-label="Đóng menu"
             className="p-1 rounded-full hover:bg-gray-100 focus:ring-2 focus:ring-blue-500"
           >
-            <span className="text-2xl text-gray-600">✖</span>
+            <X className="w-5 h-5 text-gray-600" />
           </button>
         </div>
         <nav>
-          <ul className="space-y-3 text-base">
-            {menuItems.map((item) => renderMenuItem(item, true))}
-          </ul>
+          <ul className="space-y-3 text-base">{menuItems.map((item) => renderMenuItem(item, true))}</ul>
         </nav>
       </aside>
 
-      {/* Menu desktop */}
+      {/* Desktop sidebar */}
       <nav className="hidden md:flex md:flex-col md:fixed md:top-0 md:left-0 md:h-screen md:w-48 lg:w-64 bg-white shadow-lg px-4 lg:px-6 py-6 lg:py-8 z-10 border-r border-gray-100">
         <header className="mb-8 border-b border-gray-200 pb-4">
           <Link
