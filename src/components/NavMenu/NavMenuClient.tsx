@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { useState, useCallback, useTransition } from "react";
 import {
@@ -15,38 +15,42 @@ import {
 } from "lucide-react";
 import { signOutAction } from "@/app/actions/auth";
 
-type NavMenuClientProps = {
+interface NavMenuClientProps {
   isLoggedIn: boolean;
-};
+}
 
-type MenuItem = {
+interface MenuItem {
   href: string;
   icon: React.ElementType;
   label: string;
   onClick?: () => void;
-};
+}
 
 export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const handleLogout = () => {
     startTransition(async () => {
       await signOutAction();
-      location.reload();
+      router.push("/account");
     });
   };
 
-  const menuItems: MenuItem[] = [
+  const mainMenu: MenuItem[] = [
     { href: "/learn/unit", icon: BookOpenCheck, label: "Học từ mới" },
     { href: "/wordbook", icon: BookMarked, label: "Sổ từ của tôi" },
+  ];
+
+  const userMenu: MenuItem[] = [
     { href: "/profile", icon: User, label: "Hồ sơ" },
     isLoggedIn
       ? {
           href: "#",
           icon: LogOut,
-          label: isPending ? "Đang đăng xuất..." : "Đăng xuất",
+          label: "Đăng xuất",
           onClick: handleLogout,
         }
       : { href: "/account", icon: LogIn, label: "Đăng nhập" },
@@ -57,10 +61,9 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
   }, []);
 
   const commonLinkClasses =
-    "flex items-center space-x-3 p-3 rounded-xl font-bold transition-all duration-200 ease-in-out group";
+    "flex items-center space-x-3 p-3 rounded-xl font-bold transition-all duration-200 ease-in-out group hover:scale-[1.02]";
   const activeLinkClasses = "bg-blue-100 text-blue-500 shadow-sm";
-  const inactiveLinkClasses =
-    "text-gray-700 hover:bg-gray-100 hover:text-blue-500";
+  const inactiveLinkClasses = "text-gray-700 hover:bg-gray-100 hover:text-blue-500";
 
   const renderMenuItem = (item: MenuItem, isMobile = false) => {
     const isActive = pathname === item.href;
@@ -74,8 +77,8 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
 
     const content = (
       <>
-        <Icon className="w-5 h-5 shrink-0" />
-        <span>{item.label}</span>
+        <Icon className={clsx("w-5 h-5 shrink-0", { "animate-spin": isPending && item.label === "Đăng xuất" })} />
+        <span>{isPending && item.label === "Đăng xuất" ? "Đang đăng xuất..." : item.label}</span>
       </>
     );
 
@@ -95,6 +98,7 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
         ) : (
           <Link
             href={item.href}
+            prefetch={true}
             onClick={isMobile ? handleCloseMobileMenu : undefined}
             className={className}
           >
@@ -128,7 +132,7 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
       {/* Mobile sidebar */}
       <aside
         className={clsx(
-          "fixed top-0 left-0 h-screen w-64 bg-white shadow-lg px-6 py-8 z-30 transform transition-transform duration-300 ease-in-out md:hidden",
+          "fixed top-0 left-0 h-screen w-64 bg-white shadow-md border border-gray-100 px-6 py-8 z-30 transform transition-transform duration-300 ease-in-out md:hidden",
           isMobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -150,7 +154,8 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
           </button>
         </div>
         <nav>
-          <ul className="space-y-3 text-base">{menuItems.map((item) => renderMenuItem(item, true))}</ul>
+          <ul className="space-y-3 text-base mb-6">{mainMenu.map((item) => renderMenuItem(item, true))}</ul>
+          <ul className="space-y-3 text-base">{userMenu.map((item) => renderMenuItem(item, true))}</ul>
         </nav>
       </aside>
 
@@ -164,9 +169,8 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
             Flash Vocab
           </Link>
         </header>
-        <ul className="space-y-3 text-base flex-grow">
-          {menuItems.map((item) => renderMenuItem(item))}
-        </ul>
+        <ul className="space-y-3 text-base flex-grow mb-6">{mainMenu.map((item) => renderMenuItem(item))}</ul>
+        <ul className="space-y-3 text-base">{userMenu.map((item) => renderMenuItem(item))}</ul>
       </nav>
     </>
   );

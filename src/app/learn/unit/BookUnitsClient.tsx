@@ -1,16 +1,24 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
-import Image from "next/image";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import Pagination from "@/components/Pagination/Pagination";
+
+import {
+  Filter,
+  EyeOff,
+  Eye,
+  BookOpen,
+  CheckCircle,
+  MessageSquare,
+  FileText,
+} from "lucide-react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 interface Unit {
   id: number;
   title: string;
   description: string;
-  image: string;
-  type: string;
   topic: string;
   status: string;
 }
@@ -22,10 +30,36 @@ interface Props {
 const UNIT_TYPES = ["Tất cả", "Ngữ pháp", "Từ vựng", "Giao tiếp"] as const;
 const ITEMS_PER_PAGE = 4;
 
-export default function BookUnitsClient({ units }: Props) {
+export default function BookUnitsClient({ units: fallbackUnits }: Props) {
+  const [units, setUnits] = useState<Unit[]>(fallbackUnits);
   const [filterType, setFilterType] = useState("Tất cả");
   const [hideLearned, setHideLearned] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Load Supabase data sau khi render
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+
+    async function fetchUnits() {
+      const { data, error } = await supabase
+        .from("units")
+        .select("id, title, description, topic")
+        .order("id", { ascending: true });
+      if (!error && data) {
+        const transformed = data.map((unit) => ({
+          id: unit.id,
+          title: unit.title,
+          description: unit.description,
+          topic: unit.topic,
+          status: "Chưa học", // Có thể nâng cấp sau
+        }));
+
+        setUnits(transformed);
+      }
+    }
+
+    fetchUnits();
+  }, []);
 
   const filteredUnits = useMemo(() => {
     return units.filter((unit) => {
@@ -58,15 +92,38 @@ export default function BookUnitsClient({ units }: Props) {
     [totalPages]
   );
 
+  // Map topic → icon
+  const renderIcon = (unit: Unit) => {
+    if (unit.status === "Đã học") {
+      return <CheckCircle className="w-8 h-8" />;
+    }
+
+    switch (unit.topic) {
+      case "Ngữ pháp":
+        return <FileText className="w-8 h-8" />;
+      case "Từ vựng":
+        return <BookOpen className="w-8 h-8" />;
+      case "Giao tiếp":
+        return <MessageSquare className="w-8 h-8" />;
+      default:
+        return <FileText className="w-8 h-8" />;
+    }
+  };
+
   return (
     <div className="w-full min-h-screen p-4 sm:p-6">
       {/* Filters */}
-      <div className="mb-6 flex flex-wrap items-center justify-center gap-3">
+      <div className="mb-6 max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-3">
+        <span className="text-sm text-gray-600 flex items-center gap-1">
+          <Filter className="w-4 h-4" />
+          Bộ lọc:
+        </span>
+
         {UNIT_TYPES.map((type) => (
           <button
             key={type}
             onClick={() => handleTypeChange(type)}
-            className={`px-4 py-2 rounded-full font-medium border transition-colors ${
+            className={`px-4 py-2 rounded-full font-medium border transition-colors text-sm ${
               filterType === type
                 ? "bg-purple-600 text-white border-purple-600"
                 : "bg-white text-purple-700 border-purple-300 hover:bg-purple-50"
@@ -75,17 +132,23 @@ export default function BookUnitsClient({ units }: Props) {
             {type}
           </button>
         ))}
-        <label className="inline-flex items-center space-x-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={hideLearned}
-            onChange={toggleHideLearned}
-            className="form-checkbox h-5 w-5 text-red-500 border-red-300 rounded"
-          />
-          <span className="text-sm font-medium text-red-600">
-            Ẩn unit đã học
-          </span>
-        </label>
+
+        <button
+          onClick={toggleHideLearned}
+          className="flex items-center gap-1 text-sm px-3 py-1.5 border border-red-300 text-red-600 rounded-full hover:bg-red-50 transition"
+        >
+          {hideLearned ? (
+            <>
+              <EyeOff className="w-4 h-4" />
+              Đang ẩn đã học
+            </>
+          ) : (
+            <>
+              <Eye className="w-4 h-4" />
+              Hiện tất cả
+            </>
+          )}
+        </button>
       </div>
 
       {/* Content */}
@@ -105,24 +168,16 @@ export default function BookUnitsClient({ units }: Props) {
                     : "bg-gradient-to-br from-purple-600 to-indigo-500 text-white"
                 }`}
               >
-                <div className="w-24 h-24 mx-auto rounded-xl overflow-hidden border-2 shadow mb-4">
-                  <Image
-                    width={96}
-                    height={96}
-                    src={`https://placehold.co/300x300.png?text=${encodeURIComponent(
-                      unit.type
-                    )}`}
-                    alt={unit.title}
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-16 h-16 mx-auto flex items-center justify-center rounded-full bg-white text-purple-600 shadow mb-4">
+                  {renderIcon(unit)}
                 </div>
+
                 <h2 className="text-lg font-bold text-center mb-2">
                   {unit.title}
                 </h2>
                 <p className="text-sm text-center">{unit.description}</p>
-                <p className="text-xs text-center italic mt-1">
-                  {unit.type} • {unit.topic}
-                </p>
+                <p className="text-xs text-center italic mt-1">{unit.topic}</p>
+
                 <Link
                   href={`/learn/unit/${unit.id}`}
                   className="block mt-4 text-center bg-white text-purple-700 font-semibold rounded-xl py-2 hover:bg-purple-100"

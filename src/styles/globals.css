@@ -60,3 +60,27 @@ body {
 .animate-slide-out-right {
   animation: slide-out-right 0.3s ease forwards;
 }
+/* Custom Keyframes for Skeleton Loading Effect */
+@keyframes pulseBg {
+  0% {
+    background-color: theme('colors.gray.200'); /* Tailwind's gray-200 */
+  }
+  50% {
+    background-color: theme('colors.gray.300'); /* Tailwind's gray-300 */
+  }
+  100% {
+    background-color: theme('colors.gray.200');
+  }
+}
+
+@keyframes pulseText {
+  0% {
+    background-color: theme('colors.gray.300'); /* Tailwind's gray-300 */
+  }
+  50% {
+    background-color: theme('colors.gray.400'); /* Tailwind's gray-400 */
+  }
+  100% {
+    background-color: theme('colors.gray.300');
+  }
+}
