@@ -50,7 +50,7 @@ export default function FlashcardClient({ id, vocabData }: { id: string; vocabDa
       word: currentWord.word,
       meaning: currentWord.meaning,
       status: newStatus,
-      date: new Date().toISOString(),
+      date: new Date().toLocaleString(),
     });
 
     setTimeout(() => {
