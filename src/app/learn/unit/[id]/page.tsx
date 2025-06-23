@@ -3,9 +3,11 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-export default async function FlashcardPage(props: { params: { id: string } }) {
-  const { params } = props;
-  const { id } = params;
+export default async function FlashcardPage(props: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await props.params;
+
   const supabase = await createSupabaseServerClient();
 
   const { data, error } = await supabase

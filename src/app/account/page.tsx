@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { signInAction, signUpAction } from "@/app/actions/auth";
 import toast, { Toaster } from "react-hot-toast";
+import { getAllVocabHistory } from "@/lib/vocabularyDB";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const LoginPage = () => {
   const [isRegister, setIsRegister] = useState(false);
@@ -33,10 +35,80 @@ const LoginPage = () => {
 
       if (result && !result.success) {
         toast.error(result.message || "Đã xảy ra lỗi.");
-      } else if (result && result.success) {
+        return;
+      }
+
+      if (result && result.success) {
         toast.success(
           isRegister ? "Đăng ký thành công!" : "Đăng nhập thành công!"
         );
+
+        const localVocab = await getAllVocabHistory();
+        console.log("✅ Dữ liệu từ IndexedDB:", localVocab);
+
+        if (localVocab.length > 0) {
+          const wordsWithStatus = localVocab.map(
+            (item) => `${item.word}-${item.status}`
+          );
+
+          // ✅ Lấy user từ Supabase
+          const supabase = createSupabaseBrowserClient();
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (!user) return;
+
+          // ✅ Lấy my_vocabulary từ user_profiles
+          const { data: profileData, error: profileError } = await supabase
+            .from("user_profiles")
+            .select("my_vocabulary")
+            .eq("user_id", user.id)
+            .single();
+
+          if (profileError) {
+            console.error("❌ Lỗi lấy user_profile:", profileError.message);
+            return;
+          }
+
+          // ✅ Xử lý dữ liệu lỗi nếu bị lưu dưới dạng chuỗi
+          let existingWords: string[] = [];
+
+          if (Array.isArray(profileData?.my_vocabulary)) {
+            existingWords = profileData.my_vocabulary;
+          } else if (typeof profileData?.my_vocabulary === "string") {
+            try {
+              const parsed = JSON.parse(profileData.my_vocabulary);
+              if (Array.isArray(parsed)) {
+                existingWords = parsed;
+              }
+            } catch (e) {
+              console.error("❌ Không thể parse chuỗi my_vocabulary:", e);
+            }
+          }
+
+          // ✅ Gộp và lọc trùng
+          const mergedWords = Array.from(
+            new Set([...existingWords, ...wordsWithStatus])
+          );
+
+          // ✅ Cập nhật Supabase
+          const { error: updateError } = await supabase
+            .from("user_profiles")
+            .update({ my_vocabulary: mergedWords }) // ❗ KHÔNG dùng JSON.stringify
+            .eq("user_id", user.id);
+
+          if (updateError) {
+            console.error(
+              "❌ Lỗi cập nhật my_vocabulary:",
+              updateError.message
+            );
+          } else {
+            console.log("✅ mergedWords đã cập nhật:", mergedWords);
+          }
+        } else {
+          console.log("ℹ️ IndexedDB trống, không có dữ liệu để import.");
+        }
+
         setTimeout(() => closePopup(), 1000);
       }
     });
