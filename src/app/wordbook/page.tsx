@@ -27,8 +27,6 @@ export interface Word {
   definition: string;
   status: StatusType;
   lastReviewed: string;
-  // Bổ sung các trường có thể có từ hook useVocabulary nếu cần hiển thị
-  // Ví dụ: meaning, phonetic, image_url, example
   meaning: string;
   phonetic: string;
   image_url: string | null;

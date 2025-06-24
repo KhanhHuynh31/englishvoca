@@ -1,7 +1,6 @@
 import "@/styles/globals.css";
 import NavMenu from "@/components/NavMenu/NavMenu";
 import RightMenu from "@/components/RightMenu/RightMenu";
-import HeaderMenu from "@/components/HeaderMenu/HeaderMenu";
 
 export default function RootLayout({
   children,
@@ -15,7 +14,6 @@ export default function RootLayout({
           <NavMenu />
           <div className="py-6 px-4 flex flex-wrap lg:flex-nowrap gap-4">
             <main className="w-full lg:min-w-2/3">
-              <HeaderMenu />
               <div className="min-h-96 w-full rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
                 {children}
               </div>
