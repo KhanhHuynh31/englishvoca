@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
 import Pagination from "@/components/Pagination/Pagination";
-
 import {
   Filter,
   EyeOff,
@@ -36,30 +35,67 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
   const [hideLearned, setHideLearned] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Load Supabase data sau khi render
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
 
     async function fetchUnits() {
-      const { data, error } = await supabase
+      const { data: userData } = await supabase.auth.getUser();
+      const user = userData?.user;
+
+      const { data: unitList, error: unitError } = await supabase
         .from("units")
         .select("id, title, description, topic")
         .order("id", { ascending: true });
-      if (!error && data) {
-        const transformed = data.map((unit) => ({
-          id: unit.id,
-          title: unit.title,
-          description: unit.description,
-          topic: unit.topic,
-          status: "Chưa học", // Có thể nâng cấp sau
-        }));
 
-        setUnits(transformed);
+      if (unitError || !unitList) return setUnits(fallbackUnits);
+
+      const learnedMap: Record<number, Set<string>> = {};
+      const totalMap: Record<number, number> = {};
+
+      if (user) {
+        const { data: allVocabs } = await supabase
+          .from("vocabulary")
+          .select("id, unit_id");
+
+        const { data: userVocabs } = await supabase
+          .from("user_vocab")
+          .select("word_id");
+
+        if (allVocabs && userVocabs) {
+          // Đếm số từ trong mỗi unit
+          for (const vocab of allVocabs) {
+            const unitId = vocab.unit_id;
+            if (!unitId) continue;
+            totalMap[unitId] = (totalMap[unitId] || 0) + 1;
+          }
+
+          // Đánh dấu từ đã học theo unit
+          for (const vocab of allVocabs) {
+            const unitId = vocab.unit_id;
+            if (!unitId) continue;
+            const isLearned = userVocabs.some((uv) => uv.word_id === vocab.id);
+            if (isLearned) {
+              if (!learnedMap[unitId]) learnedMap[unitId] = new Set();
+              learnedMap[unitId].add(vocab.id);
+            }
+          }
+        }
       }
+
+      // Gán status từng unit
+      const finalUnits: Unit[] = unitList.map((unit) => {
+        const learnedCount = learnedMap[unit.id]?.size || 0;
+        const totalCount = totalMap[unit.id] || 0;
+        const status =
+          totalCount > 0 && learnedCount === totalCount ? "Đã học" : "Chưa học";
+        return { ...unit, status };
+      });
+
+      setUnits(finalUnits);
     }
 
     fetchUnits();
-  }, []);
+  }, [fallbackUnits]);
 
   const filteredUnits = useMemo(() => {
     return units.filter((unit) => {
@@ -92,7 +128,6 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
     [totalPages]
   );
 
-  // Map topic → icon
   const renderIcon = (unit: Unit) => {
     if (unit.status === "Đã học") {
       return <CheckCircle className="w-8 h-8" />;
@@ -112,7 +147,6 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
 
   return (
     <div className="w-full min-h-screen p-4 sm:p-6">
-      {/* Filters */}
       <div className="mb-6 max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-3">
         <span className="text-sm text-gray-600 flex items-center gap-1">
           <Filter className="w-4 h-4" />
@@ -151,7 +185,6 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
         </button>
       </div>
 
-      {/* Content */}
       {paginatedUnits.length === 0 ? (
         <div className="text-center text-gray-500 text-lg">
           Không có unit phù hợp với bộ lọc.
@@ -188,7 +221,6 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
             ))}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <Pagination
               totalPages={totalPages}

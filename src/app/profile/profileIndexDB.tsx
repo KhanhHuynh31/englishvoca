@@ -1,33 +1,26 @@
 "use client";
 
-import { useGetIndexDB } from "@/components/hooks/useGetIndexDB";
+import { useGetIndexDB, Word as LocalWord } from "@/components/hooks/useGetIndexDB";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Bar,
   BarChart,
+  Bar,
   CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
   XAxis,
   YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import { BookCheck, BrainCircuit, GraduationCap } from "lucide-react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type StatusType = "new" | "known" | "hard";
 
-export interface Word {
-  id: string;
-  term: string;
-  definition: string;
-  meaning: string;
-  status: StatusType;
-  pronunciation: string;
-  lastReviewed: string;
-}
+// Use LocalWord directly instead of defining an empty interface Word
 
 interface StatCardProps {
   icon: React.ReactNode;
@@ -37,14 +30,59 @@ interface StatCardProps {
 }
 
 export default function ProfileIndexDB() {
-  const [vocabData, setVocabData] = useState<Word[]>([]);
-  const rawDataFromDB = useGetIndexDB();
+  const localData = useGetIndexDB();
+  const [vocabData, setVocabData] = useState<LocalWord[]>([]);
 
   useEffect(() => {
-    if (rawDataFromDB.length > 0) {
-      setVocabData(rawDataFromDB);
-    }
-  }, [rawDataFromDB]);
+    const fetchData = async () => {
+      const supabase = createSupabaseBrowserClient();
+      const { data: userData } = await supabase.auth.getUser();
+
+      if (userData?.user) {
+        const { data, error } = await supabase
+          .from("user_vocab")
+          .select(`
+            created_at,
+            word_status,
+            vocabulary (
+              id,
+              word,
+              phonetic,
+              partOfSpeech,
+              meaning,
+              example,
+              definition,
+              image_url
+            )
+          `)
+          .eq("user_id", userData.user.id);
+
+        if (!error && data) {
+          const formatted: LocalWord[] = data.map((item) => {
+            const v = Array.isArray(item.vocabulary) ? item.vocabulary[0] : item.vocabulary;
+            return {
+              id: v?.id,
+              term: v?.word,
+              definition: v?.definition || "",
+              meaning: v?.meaning || "",
+              pronunciation: v?.phonetic || "",
+              status: item.word_status || "new",
+              lastReviewed: item.created_at || new Date().toISOString(),
+              image_url: v?.image_url || "",
+              phonetic: v?.phonetic || "",
+            };
+          });
+          setVocabData(formatted);
+          return;
+        }
+      }
+
+      // fallback nếu chưa đăng nhập hoặc lỗi
+      setVocabData(localData);
+    };
+
+    fetchData();
+  }, [localData]);
 
   const stats = useMemo(() => {
     const total = vocabData.length;
@@ -101,7 +139,7 @@ export default function ProfileIndexDB() {
       .slice(0, 5);
   }, [vocabData]);
 
-  if (vocabData.length === 0 && rawDataFromDB.length === 0) {
+  if (vocabData.length === 0) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-50 text-gray-500">
         <p>Đang tải dữ liệu hoặc chưa có từ vựng nào...</p>
@@ -151,20 +189,10 @@ export default function ProfileIndexDB() {
                     outerRadius={110}
                     fill="#8884d8"
                     dataKey="value"
-                    label={({
-                      cx,
-                      cy,
-                      midAngle,
-                      innerRadius,
-                      outerRadius,
-                      percent,
-                    }) => {
-                      const radius =
-                        innerRadius + (outerRadius - innerRadius) * 0.6;
-                      const x =
-                        cx + radius * Math.cos(-midAngle * (Math.PI / 180));
-                      const y =
-                        cy + radius * Math.sin(-midAngle * (Math.PI / 180));
+                    label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                      const radius = innerRadius + (outerRadius - innerRadius) * 0.6;
+                      const x = cx + radius * Math.cos(-midAngle * (Math.PI / 180));
+                      const y = cy + radius * Math.sin(-midAngle * (Math.PI / 180));
 
                       return (
                         <text
