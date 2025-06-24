@@ -146,7 +146,7 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
   };
 
   return (
-    <div className="w-full min-h-screen p-4 sm:p-6">
+    <div className="w-full p-4 ">
       <div className="mb-6 max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-3">
         <span className="text-sm text-gray-600 flex items-center gap-1">
           <Filter className="w-4 h-4" />
@@ -191,7 +191,7 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto mb-4">
             {paginatedUnits.map((unit) => (
               <div
                 key={unit.id}

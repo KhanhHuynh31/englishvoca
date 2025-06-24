@@ -24,7 +24,7 @@ type NavigationDirection = "left" | "right";
 
 const TRANSITION_DELAY = 400;
 
-export default function FlashcardClient({ id, vocabData }: { id: string; vocabData: VocabularyItem[] }) {
+export default function FlashcardClient({ vocabData }: { vocabData: VocabularyItem[] }) {
   const [viewState, setViewState] = useState<ViewState>("studying");
   const [statuses, setStatuses] = useState<(StatusType | null)[]>(Array(vocabData.length).fill(null));
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -59,7 +59,7 @@ export default function FlashcardClient({ id, vocabData }: { id: string; vocabDa
       else handleNavigate("right");
       setIsTransitioning(false);
     }, TRANSITION_DELAY);
-  }, [currentIndex, vocabData, id, isTransitioning, handleNavigate]);
+  }, [currentIndex, vocabData, isTransitioning, handleNavigate]);
 
   const handleRetry = useCallback(() => {
     setCurrentIndex(0);

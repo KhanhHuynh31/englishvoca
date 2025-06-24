@@ -31,32 +31,58 @@ export const saveVocabHistory = async (vocab: {
   } = await supabase.auth.getUser();
 
   if (user) {
-    // Người dùng đã đăng nhập, thực hiện lưu vào Supabase
     try {
-      const { data, error } = await createSupabaseBrowserClient()
-        .from("user_vocab") // Tên bảng của bạn trên Supabase
-        .upsert(
+      // 1. Kiểm tra xem đã có bản ghi chưa
+      const { data: existing, error: checkError } = await supabase
+        .from("user_vocab")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("word_id", vocab.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Lỗi khi kiểm tra từ vựng:", checkError.message);
+        return;
+      }
+
+      if (existing) {
+        // 2. Nếu đã có -> update
+        const { error: updateError } = await supabase
+          .from("user_vocab")
+          .update({
+            word_status: vocab.status,
+            last_reviewed: vocab.date,
+          })
+          .eq("id", existing.id);
+
+        if (updateError) {
+          console.error("Không thể cập nhật từ:", updateError.message);
+        } else {
+          console.log(`✅ Đã cập nhật từ '${vocab.word}'`);
+        }
+      } else {
+        // 3. Nếu chưa có -> insert
+        const { error: insertError } = await supabase.from("user_vocab").insert([
           {
             user_id: user.id,
             word_id: vocab.id,
             word_status: vocab.status,
             last_reviewed: vocab.date,
-            // Thêm các trường khác nếu cần, ví dụ: user_id: user.uid
           },
-          { onConflict: "id" } // Chỉ định cột 'id' là khóa chính, nếu có bản ghi trùng id, nó sẽ được cập nhật
-        )
-        .select(); // Để trả về dữ liệu đã được lưu/cập nhật
+        ]);
 
-      if (error) {
-        console.error("Lỗi khi lưu vào Supabase:", error.message);
-      } else {
-        console.log("Đã lưu/cập nhật thành công trên Supabase:", data);
+        if (insertError) {
+          console.error("Không thể thêm từ mới:", insertError.message);
+        } else {
+          console.log(`✅ Đã thêm mới từ '${vocab.word}'`);
+        }
       }
     } catch (error) {
-      console.error("Lỗi không mong muốn khi kết nối Supabase:", error);
+      console.error("Lỗi không mong muốn:", error);
     }
   } else {
-    console.log("Người dùng chưa đăng nhập, lưu vào IndexDB.");
+    // Người dùng chưa đăng nhập → lưu vào IndexedDB
+    console.log("🗃️ Người dùng chưa đăng nhập, lưu vào IndexDB.");
     const db = await getDB();
     const existing = await db.get(STORE_NAME, vocab.id);
 
@@ -68,10 +94,11 @@ export const saveVocabHistory = async (vocab: {
     ) {
       await db.put(STORE_NAME, { ...existing, ...vocab });
     } else {
-      console.log(`Word ${vocab.id} is unchanged.`);
+      console.log(`Word ${vocab.id} không thay đổi.`);
     }
   }
 };
+
 
 export const getAllVocabHistory = async () => {
   const db = await getDB();

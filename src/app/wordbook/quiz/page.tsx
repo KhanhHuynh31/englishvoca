@@ -1,11 +1,11 @@
 "use client";
+
 import { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Listening from "@/components/Listening/Listening";
 import { useVocabularyQuiz } from "@/components/hooks/useVocabularyQuiz";
 
-// Types for better type safety
 interface QuizState {
   index: number;
   score: number;
@@ -39,6 +39,7 @@ export default function VocabularyQuiz() {
     setQuestions,
     updateWrongAnswers,
     getWrongQuestionObjects,
+    isLoading,
   } = useVocabularyQuiz();
 
   const currentQuestion = useMemo(
@@ -51,21 +52,14 @@ export default function VocabularyQuiz() {
   );
   const hasWrongQuestions = wrongQuestions.length > 1;
 
-  // Async function to handle answer processing
   const processAnswer = useCallback(
     async (answer: string): Promise<void> => {
-      if (!currentQuestion) {
-        console.error("No current question available");
-        return;
-      }
+      if (!currentQuestion) return;
 
       try {
         const isCorrect = answer === currentQuestion.correct;
-
-        // Update wrong answers tracking
         updateWrongAnswers(currentQuestion.word, isCorrect);
 
-        // Update quiz state
         setQuizState((prev) => ({
           ...prev,
           score: prev.score + (isCorrect ? 1 : 0),
@@ -74,27 +68,23 @@ export default function VocabularyQuiz() {
           error: null,
         }));
 
-        // Wait for visual feedback before proceeding
         await new Promise((resolve) => setTimeout(resolve, ANSWER_DELAY));
 
-        // Move to next question or finish quiz
         setQuizState((prev) => {
-          const isLastQuestion = prev.index + 1 >= questions.length;
-
+          const isLast = prev.index + 1 >= questions.length;
           return {
             ...prev,
-            index: isLastQuestion ? prev.index : prev.index + 1,
+            index: isLast ? prev.index : prev.index + 1,
             selected: null,
             showHint: false,
-            finished: isLastQuestion,
+            finished: isLast,
             isProcessing: false,
           };
         });
-      } catch (error) {
-        console.error("Error processing answer:", error);
+      } catch {
         setQuizState((prev) => ({
           ...prev,
-          error: "Có lỗi xảy ra khi xử lý câu trả lời. Vui lòng thử lại.",
+          error: "Có lỗi xảy ra khi xử lý câu trả lời.",
           isProcessing: false,
         }));
       }
@@ -102,84 +92,60 @@ export default function VocabularyQuiz() {
     [currentQuestion, questions.length, updateWrongAnswers]
   );
 
-  // Handle answer selection
   const handleAnswerSelect = useCallback(
-    async (answer: string): Promise<void> => {
+    async (answer: string) => {
       if (quizState.selected || quizState.isProcessing) return;
-
       await processAnswer(answer);
     },
     [quizState.selected, quizState.isProcessing, processAnswer]
   );
 
-  // Handle "I don't know" button
-  const handleDontKnow = useCallback(async (): Promise<void> => {
+  const handleDontKnow = useCallback(async () => {
     if (quizState.selected || quizState.isProcessing) return;
-
     await processAnswer("Không biết");
   }, [quizState.selected, quizState.isProcessing, processAnswer]);
 
-  // Reset quiz to initial state
-  const resetQuiz = useCallback((): void => {
+  const resetQuiz = useCallback(() => {
     setQuizState(INITIAL_QUIZ_STATE);
   }, []);
 
-  // Start wrong questions quiz
-  const startWrongQuestionsQuiz = useCallback((): void => {
-    try {
-      if (wrongQuestions.length === 0) {
-        console.warn("No wrong questions available");
-        return;
-      }
-
-      setQuestions(wrongQuestions);
-      setQuizState({
-        ...INITIAL_QUIZ_STATE,
-        showOnlyWrong: true,
-      });
-    } catch (error) {
-      console.error("Error starting wrong questions quiz:", error);
-      setQuizState((prev) => ({
-        ...prev,
-        error: "Không thể bắt đầu luyện tập câu sai. Vui lòng thử lại.",
-      }));
-    }
+  const startWrongQuestionsQuiz = useCallback(() => {
+    if (wrongQuestions.length === 0) return;
+    setQuestions(wrongQuestions);
+    setQuizState({ ...INITIAL_QUIZ_STATE, showOnlyWrong: true });
   }, [wrongQuestions, setQuestions]);
 
-  // Toggle hint visibility
-  const toggleHint = useCallback((): void => {
-    setQuizState((prev) => ({
-      ...prev,
-      showHint: !prev.showHint,
-    }));
+  const toggleHint = useCallback(() => {
+    setQuizState((prev) => ({ ...prev, showHint: !prev.showHint }));
   }, []);
 
-  // Clear error
-  const clearError = useCallback((): void => {
-    setQuizState((prev) => ({
-      ...prev,
-      error: null,
-    }));
+  const clearError = useCallback(() => {
+    setQuizState((prev) => ({ ...prev, error: null }));
   }, []);
 
-  // Render insufficient questions message
+  // ✅ Loading state
+  if (isLoading) {
+    return (
+      <div className="p-6 text-center text-gray-500 text-lg">
+        ⏳ Đang tải câu hỏi luyện tập...
+      </div>
+    );
+  }
+
+  // ✅ Không đủ từ để tạo quiz
   if (questions.length < MIN_QUESTIONS_REQUIRED && !quizState.showOnlyWrong) {
     return (
       <div className="p-6 text-center text-lg text-gray-600">
-        ⚠️ Bạn cần học thêm ít nhất {MIN_QUESTIONS_REQUIRED} từ để bắt đầu luyện
-        tập.
+        ⚠️ Bạn cần học thêm ít nhất {MIN_QUESTIONS_REQUIRED} từ để bắt đầu luyện tập.
         <br />
-        <Link
-          href="/unit"
-          className="text-blue-600 underline mt-2 inline-block"
-        >
+        <Link href="/unit" className="text-blue-600 underline mt-2 inline-block">
           📘 Học từ vựng ngay
         </Link>
       </div>
     );
   }
 
-  // Render completion screen
+  // ✅ Quiz đã hoàn thành
   if (quizState.finished) {
     return (
       <div className="text-center space-y-4 p-6">
@@ -192,17 +158,13 @@ export default function VocabularyQuiz() {
         <h2 className="text-3xl font-bold text-green-600">🎉 Hoàn thành!</h2>
 
         <p>
-          Bạn trả lời đúng <strong>{quizState.score}</strong>/{questions.length}{" "}
-          câu.
+          Bạn trả lời đúng <strong>{quizState.score}</strong> / {questions.length} câu.
         </p>
 
         {quizState.error && (
           <div className="p-3 bg-red-100 border border-red-300 rounded text-red-700">
             {quizState.error}
-            <button
-              onClick={clearError}
-              className="ml-2 text-sm underline hover:no-underline"
-            >
+            <button onClick={clearError} className="ml-2 text-sm underline">
               Đóng
             </button>
           </div>
@@ -235,10 +197,9 @@ export default function VocabularyQuiz() {
     );
   }
 
-  // Render quiz interface
+  // ✅ Giao diện quiz chính
   return (
     <div className="max-w-6xl mx-auto p-4 flex flex-col gap-6">
-      {/* Progress bar */}
       <div>
         <div className="text-sm text-gray-600 mb-1 flex justify-between">
           <span>Tiến độ</span>
@@ -256,21 +217,16 @@ export default function VocabularyQuiz() {
         </div>
       </div>
 
-      {/* Error display */}
       {quizState.error && (
         <div className="p-3 bg-red-100 border border-red-300 rounded text-red-700">
           {quizState.error}
-          <button
-            onClick={clearError}
-            className="ml-2 text-sm underline hover:no-underline"
-          >
+          <button onClick={clearError} className="ml-2 text-sm underline">
             Đóng
           </button>
         </div>
       )}
 
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Question section */}
         <div className="flex-1 space-y-4">
           <div className="text-3xl font-bold text-blue-700 text-center">
             <div className="flex items-center justify-center gap-2">
@@ -282,7 +238,6 @@ export default function VocabularyQuiz() {
             {currentQuestion && <Listening word={currentQuestion.word} />}
           </div>
 
-          {/* Answer options */}
           <div className="grid grid-cols-2 gap-4">
             {currentQuestion?.options.map((option) => (
               <button
@@ -307,7 +262,6 @@ export default function VocabularyQuiz() {
             ))}
           </div>
 
-          {/* Controls */}
           <div className="flex justify-between items-center pt-2">
             <label className="text-sm flex items-center gap-2 cursor-pointer">
               <input
@@ -329,7 +283,6 @@ export default function VocabularyQuiz() {
           </div>
         </div>
 
-        {/* Hint section */}
         <div className="flex-1 flex items-center justify-center min-h-[250px]">
           {quizState.showHint && currentQuestion ? (
             <Image
@@ -338,13 +291,6 @@ export default function VocabularyQuiz() {
               height={300}
               alt={currentQuestion.word}
               className="rounded shadow-lg"
-              onError={() => {
-                console.error(
-                  "Failed to load hint image for:",
-                  currentQuestion.word
-                );
-                // You could set a fallback image here
-              }}
             />
           ) : (
             <div className="text-gray-400 italic text-center px-4">

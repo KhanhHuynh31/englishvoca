@@ -15,7 +15,7 @@ export default function Pagination({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
   return (
-    <div className="flex justify-center gap-2 mt-6">
+    <div className="flex justify-center gap-2">
       {Array.from({ length: totalPages }, (_, i) => (
         <button
           key={i}

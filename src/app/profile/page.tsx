@@ -22,8 +22,8 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50">
-      <div className="max-w-5xl mx-auto px-4 py-6">
+    <div className="w-full bg-slate-50">
+      <div className="max-w-5xl mx-auto px-4 py-4">
         <div className="bg-white p-6 rounded-2xl shadow-md mb-8">
           <div className="flex items-center gap-6">
             <div className="relative w-24 h-24">
@@ -37,7 +37,7 @@ export default async function ProfilePage() {
                 {profile?.username ?? "Khách"}
               </h1>
               <p className="text-gray-500 text-sm">
-                {user?.email ?? "Chưa đăng nhập"}
+                {user?.email ?? "Đăng nhập ngay để lưu lại từ bạn đã học trên nhiều thiết bị!"}
               </p>
               {user?.created_at && (
                 <p className="text-gray-400 text-sm mt-1">
@@ -48,7 +48,6 @@ export default async function ProfilePage() {
             </div>
           </div>
         </div>
-
         <ProfileIndexDB />
       </div>
     </div>

@@ -13,7 +13,11 @@ import Listening from "@/components/Listening/Listening";
 import Pagination from "@/components/Pagination/Pagination";
 import { clearVocabHistory, updateVocabStatus } from "@/lib/vocabularyDB";
 // import { useGetIndexDB } from "@/components/hooks/useGetIndexDB"; // LOẠI BỎ IMPORT NÀY
-import { useVocabulary, Word as VocabularyWord } from "@/components/hooks/useVocabulary"; // IMPORT HOOK MỚI VÀ ĐỔI TÊN WORD ĐỂ TRÁNH TRÙNG LẶP
+import {
+  useVocabulary,
+  Word as VocabularyWord,
+} from "@/components/hooks/useVocabulary"; // IMPORT HOOK MỚI VÀ ĐỔI TÊN WORD ĐỂ TRÁNH TRÙNG LẶP
+import LoadingWordBook from "./loading";
 
 // =================================================================
 // 1. TYPES & CONSTANTS (Định nghĩa kiểu dữ liệu và hằng số)
@@ -274,14 +278,7 @@ const WordBook = () => {
   // --- Render JSX ---
   if (loading) {
     return (
-      <div className="w-full min-h-[450px] flex items-center justify-center bg-[#fdf6e3]">
-        <div className="text-center">
-          <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4 animate-spin"></div>
-          <p className="text-xl font-semibold text-gray-700">
-            Đang tải sổ từ của bạn...
-          </p>
-        </div>
-      </div>
+      <LoadingWordBook/>
     );
   }
 
@@ -300,7 +297,7 @@ const WordBook = () => {
   }
 
   return (
-    <div className="w-full min-h-[450] px-4 py-8 bg-[#fdf6e3] text-gray-800">
+    <div className="w-full px-4 py-4 bg-[#fdf6e3] text-gray-800">
       <div className="max-w-7xl mx-auto space-y-6">
         <header className="sticky top-0 z-10 bg-[#fdf6e3]/90 backdrop-blur-md rounded-b-xl p-4 shadow-md">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -375,16 +372,19 @@ const WordBook = () => {
               <div className="text-7xl mb-4 animate-[bookFloat_3s_ease-in-out_infinite]">
                 📖
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                Sổ từ của bạn còn trống
-              </h2>
-              <p className="text-gray-600 mb-4">
-                Hãy bắt đầu tra cứu và lưu từ để làm đầy sổ tay nhé!
-              </p>
+              <div className="flex flex-col items-center justify-center  text-gray-600 space-y-4">
+                <p className="text-lg font-medium">Bạn chưa học từ vựng nào!</p>
+                <Link
+                  href="/learn/unit"
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg shadow hover:bg-purple-700 transition"
+                >
+                  🚀 Bắt đầu học ngay
+                </Link>
+              </div>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-5">
                 {paginatedWords.map((word) => (
                   <WordCard
                     key={word.id}
