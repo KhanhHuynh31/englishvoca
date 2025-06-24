@@ -6,6 +6,7 @@ import CompletionScreen from "./components/CompletionScreen";
 import { saveVocabHistory } from "@/lib/vocabularyDB";
 
 interface VocabularyItem {
+  id: string;
   word: string;
   meaning: string;
   example: string;
@@ -46,7 +47,7 @@ export default function FlashcardClient({ id, vocabData }: { id: string; vocabDa
 
     const currentWord = vocabData[currentIndex];
     await saveVocabHistory({
-      id: `${id}-${currentWord.word}`,
+      id: currentWord.id,
       word: currentWord.word,
       meaning: currentWord.meaning,
       status: newStatus,

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { signInAction, signUpAction } from "@/app/actions/auth";
 import toast, { Toaster } from "react-hot-toast";
-import { getAllVocabHistory } from "@/lib/vocabularyDB";
+import { clearVocabHistory, getAllVocabHistory } from "@/lib/vocabularyDB";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const LoginPage = () => {
@@ -25,6 +25,78 @@ const LoginPage = () => {
     }
   };
 
+  /**
+   * Hàm trợ giúp: Xử lý tất cả các tác vụ sau khi xác thực thành công.
+   * Bao gồm hiển thị thông báo, đồng bộ dữ liệu và đóng popup.
+   */
+  const handleAuthSuccess = async (isRegister: boolean) => {
+    // Hiển thị thông báo thành công cho người dùng
+    toast.success(isRegister ? "Đăng ký thành công!" : "Đăng nhập thành công!");
+
+    try {
+      const localVocab = await getAllVocabHistory();
+      // Nếu không có từ vựng local, không làm gì thêm
+      if (localVocab.length === 0) {
+        console.log("ℹ️ IndexedDB trống, không có dữ liệu để import.");
+        return;
+      }
+
+      const supabase = createSupabaseBrowserClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        console.error("Chưa đăng nhập! Không thể đồng bộ.");
+        return;
+      }
+
+      // 1. Lấy từ vựng đã có của user trên server
+      const { data: existingVocab, error: fetchError } = await supabase
+        .from("user_vocab")
+        .select("word_id")
+        .eq("user_id", user.id);
+
+      if (fetchError) throw new Error(fetchError.message);
+
+      // 2. Lọc ra những từ mới chưa có trên server
+      const existingWordIds = new Set(existingVocab?.map((v) => v.word_id));
+      const newEntries = localVocab
+        .filter((item) => !existingWordIds.has(item.id))
+        .map((item) => ({
+          user_id: user.id,
+          word_id: item.id,
+          word_status: item.status,
+        }));
+
+      if (newEntries.length === 0) {
+        console.log("ℹ️ Không có từ vựng mới để đồng bộ.");
+        return;
+      }
+
+      // 3. Chèn các từ mới vào database
+      const { error: insertError } = await supabase
+        .from("user_vocab")
+        .insert(newEntries);
+
+      if (insertError) throw new Error(insertError.message);
+
+      // Xóa lịch sử local chỉ khi đã chèn lên server thành công
+      await clearVocabHistory();
+      toast.success(`Đồng bộ thành công ${newEntries.length} từ.`);
+    } catch (error: any) {
+      console.error("Lỗi khi đồng bộ dữ liệu:", error.message);
+      toast.error("Có lỗi xảy ra khi đồng bộ dữ liệu của bạn.");
+    } finally {
+      // Tác vụ này luôn được gọi sau khi xác thực thành công,
+      // dù cho việc đồng bộ có lỗi hay không.
+      setTimeout(() => closePopup(), 1000);
+    }
+  };
+
+  /**
+   * Hàm chính: Xử lý sự kiện submit form.
+   */
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -33,83 +105,11 @@ const LoginPage = () => {
       const action = isRegister ? signUpAction : signInAction;
       const result = await action(formData);
 
-      if (result && !result.success) {
-        toast.error(result.message || "Đã xảy ra lỗi.");
-        return;
-      }
-
-      if (result && result.success) {
-        toast.success(
-          isRegister ? "Đăng ký thành công!" : "Đăng nhập thành công!"
-        );
-
-        const localVocab = await getAllVocabHistory();
-        console.log("✅ Dữ liệu từ IndexedDB:", localVocab);
-
-        if (localVocab.length > 0) {
-          const wordsWithStatus = localVocab.map(
-            (item) => `${item.word}-${item.status}`
-          );
-
-          // ✅ Lấy user từ Supabase
-          const supabase = createSupabaseBrowserClient();
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
-          if (!user) return;
-
-          // ✅ Lấy my_vocabulary từ user_profiles
-          const { data: profileData, error: profileError } = await supabase
-            .from("user_profiles")
-            .select("my_vocabulary")
-            .eq("user_id", user.id)
-            .single();
-
-          if (profileError) {
-            console.error("❌ Lỗi lấy user_profile:", profileError.message);
-            return;
-          }
-
-          // ✅ Xử lý dữ liệu lỗi nếu bị lưu dưới dạng chuỗi
-          let existingWords: string[] = [];
-
-          if (Array.isArray(profileData?.my_vocabulary)) {
-            existingWords = profileData.my_vocabulary;
-          } else if (typeof profileData?.my_vocabulary === "string") {
-            try {
-              const parsed = JSON.parse(profileData.my_vocabulary);
-              if (Array.isArray(parsed)) {
-                existingWords = parsed;
-              }
-            } catch (e) {
-              console.error("❌ Không thể parse chuỗi my_vocabulary:", e);
-            }
-          }
-
-          // ✅ Gộp và lọc trùng
-          const mergedWords = Array.from(
-            new Set([...existingWords, ...wordsWithStatus])
-          );
-
-          // ✅ Cập nhật Supabase
-          const { error: updateError } = await supabase
-            .from("user_profiles")
-            .update({ my_vocabulary: mergedWords }) // ❗ KHÔNG dùng JSON.stringify
-            .eq("user_id", user.id);
-
-          if (updateError) {
-            console.error(
-              "❌ Lỗi cập nhật my_vocabulary:",
-              updateError.message
-            );
-          } else {
-            console.log("✅ mergedWords đã cập nhật:", mergedWords);
-          }
-        } else {
-          console.log("ℹ️ IndexedDB trống, không có dữ liệu để import.");
-        }
-
-        setTimeout(() => closePopup(), 1000);
+      if (result?.success) {
+        // Ủy quyền xử lý cho hàm trợ giúp khi thành công
+        await handleAuthSuccess(isRegister);
+      } else {
+        toast.error(result?.message || "Đã xảy ra lỗi.");
       }
     });
   };

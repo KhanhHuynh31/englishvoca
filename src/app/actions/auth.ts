@@ -60,10 +60,10 @@ export async function signUpAction(formData: FormData) {
     return { success: false, message: authError.message };
   }
 
-  // --- Bắt đầu thêm dữ liệu vào bảng user_profiles ---
+  // --- Bắt đầu thêm dữ liệu vào bảng user_profile ---
   if (authData.user) {
     const { error: profileError } = await supabase
-      .from("user_profiles")
+      .from("user_profile")
       .insert([
         {
           user_id: authData.user.id, // ID của người dùng từ Supabase Auth
@@ -85,7 +85,7 @@ export async function signUpAction(formData: FormData) {
       };
     }
   }
-  // --- Kết thúc thêm dữ liệu vào bảng user_profiles ---
+  // --- Kết thúc thêm dữ liệu vào bảng user_profile ---
 
   return { success: true };
 }

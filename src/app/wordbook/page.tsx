@@ -12,18 +12,27 @@ import {
 import Listening from "@/components/Listening/Listening";
 import Pagination from "@/components/Pagination/Pagination";
 import { clearVocabHistory, updateVocabStatus } from "@/lib/vocabularyDB";
-import { useGetIndexDB } from "@/components/hooks/useGetIndexDB";
+// import { useGetIndexDB } from "@/components/hooks/useGetIndexDB"; // LOẠI BỎ IMPORT NÀY
+import { useVocabulary, Word as VocabularyWord } from "@/components/hooks/useVocabulary"; // IMPORT HOOK MỚI VÀ ĐỔI TÊN WORD ĐỂ TRÁNH TRÙNG LẶP
 
 // =================================================================
 // 1. TYPES & CONSTANTS (Định nghĩa kiểu dữ liệu và hằng số)
 // =================================================================
 
+// Điều chỉnh Word interface để khớp với Word trong useVocabulary hook
+// Hoặc sử dụng trực tiếp VocabularyWord từ hook đã import
 export interface Word {
   id: string;
   term: string;
   definition: string;
   status: StatusType;
   lastReviewed: string;
+  // Bổ sung các trường có thể có từ hook useVocabulary nếu cần hiển thị
+  // Ví dụ: meaning, phonetic, image_url, example
+  meaning: string;
+  phonetic: string;
+  image_url: string | null;
+  example?: string | null;
 }
 
 export type StatusType = "new" | "known" | "hard";
@@ -70,7 +79,7 @@ const STATUS_CONFIG: Record<
 // =================================================================
 
 type WordCardProps = {
-  word: Word;
+  word: Word; // Sử dụng interface Word đã cập nhật
   isRevealed: boolean;
   hideDefinition: boolean;
   onCardClick: (id: string) => void;
@@ -109,8 +118,18 @@ const WordCardComponent = ({
         }`}
       >
         <p className="text-sm text-gray-700 italic leading-snug">
-          {word.definition}
+          {/* Ưu tiên definition, nếu không có thì dùng meaning */}
+          {word.definition || word.meaning}
         </p>
+        {/* Có thể hiển thị thêm phonetic, image_url, example nếu muốn */}
+        {word.phonetic && (
+          <p className="text-xs text-gray-600 mt-1">/{word.phonetic}/</p>
+        )}
+        {word.example && (
+          <p className="text-xs text-gray-600 italic mt-1">
+            VD: "{word.example}"
+          </p>
+        )}
       </div>
 
       {hideDefinition && !isRevealed && (
@@ -146,6 +165,9 @@ const WordCard = memo(WordCardComponent);
 // =================================================================
 
 const WordBook = () => {
+  // --- Data Fetching with useVocabulary hook ---
+  const { words: fetchedWords, loading, error } = useVocabulary(); // Đổi tên 'words' thành 'fetchedWords' để tránh xung đột
+
   // --- State Management ---
   const [allWords, setAllWords] = useState<Word[]>([]);
   const [filter, setFilter] = useState<StatusType>("new");
@@ -154,11 +176,12 @@ const WordBook = () => {
   const [hideDefinition, setHideDefinition] = useState(false);
   const [revealedIds, setRevealedIds] = useState<Set<string>>(new Set());
 
-  // --- Data Fetching ---
-  const vocabData = useGetIndexDB();
+  // Cập nhật state allWords khi fetchedWords từ hook thay đổi
   useEffect(() => {
-    setAllWords(vocabData);
-  }, [vocabData]);
+    // Đảm bảo kiểu dữ liệu khớp, vì Word từ hook useVocabulary có nhiều trường hơn Word hiện tại
+    // Cần ánh xạ nếu Word trong file này không khớp hoàn toàn
+    setAllWords(fetchedWords as Word[]);
+  }, [fetchedWords]);
 
   // --- Performance Optimization with useMemo ---
   const wordsByStatus = useMemo(() => {
@@ -205,6 +228,8 @@ const WordBook = () => {
             : word
         )
       );
+      // Gọi hàm updateVocabStatus từ IndexedDB hoặc API nếu cần đồng bộ lên server
+      // Hiện tại, updateVocabStatus chỉ tương tác với IndexedDB, điều này ổn.
       await updateVocabStatus(id, newStatus, newTimestamp);
     },
     []
@@ -217,7 +242,7 @@ const WordBook = () => {
       )
     ) {
       await clearVocabHistory();
-      setAllWords([]);
+      setAllWords([]); // Xóa tất cả từ trong state
     }
   }, []);
 
@@ -249,6 +274,33 @@ const WordBook = () => {
   );
 
   // --- Render JSX ---
+  if (loading) {
+    return (
+      <div className="w-full min-h-[450px] flex items-center justify-center bg-[#fdf6e3]">
+        <div className="text-center">
+          <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4 animate-spin"></div>
+          <p className="text-xl font-semibold text-gray-700">
+            Đang tải sổ từ của bạn...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full min-h-[450px] flex items-center justify-center bg-[#fdf6e3]">
+        <div className="text-center text-red-600">
+          <p className="text-xl font-semibold mb-2">Đã xảy ra lỗi!</p>
+          <p className="text-lg">{error}</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Vui lòng thử tải lại trang hoặc kiểm tra kết nối mạng của bạn.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-h-[450] px-4 py-8 bg-[#fdf6e3] text-gray-800">
       <div className="max-w-7xl mx-auto space-y-6">
