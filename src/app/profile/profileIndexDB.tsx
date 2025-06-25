@@ -177,7 +177,7 @@ export default function ProfileIndexDB() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="">
       <h1 className="text-3xl font-bold text-gray-800 mb-6">
         Bảng điều khiển tiến độ
       </h1>

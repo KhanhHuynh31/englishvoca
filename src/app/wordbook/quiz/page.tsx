@@ -40,6 +40,7 @@ export default function VocabularyQuiz() {
     updateWrongAnswers,
     getWrongQuestionObjects,
     isLoading,
+    updateLastReviewed,
   } = useVocabularyQuiz();
 
   const currentQuestion = useMemo(
@@ -59,7 +60,7 @@ export default function VocabularyQuiz() {
       try {
         const isCorrect = answer === currentQuestion.correct;
         updateWrongAnswers(currentQuestion.word, isCorrect);
-
+        updateLastReviewed(currentQuestion.word);
         setQuizState((prev) => ({
           ...prev,
           score: prev.score + (isCorrect ? 1 : 0),
@@ -89,7 +90,7 @@ export default function VocabularyQuiz() {
         }));
       }
     },
-    [currentQuestion, questions.length, updateWrongAnswers]
+    [currentQuestion, questions.length, updateWrongAnswers, updateLastReviewed]
   );
 
   const handleAnswerSelect = useCallback(
@@ -136,9 +137,13 @@ export default function VocabularyQuiz() {
   if (questions.length < MIN_QUESTIONS_REQUIRED && !quizState.showOnlyWrong) {
     return (
       <div className="p-6 text-center text-lg text-gray-600">
-        ⚠️ Bạn cần học thêm ít nhất {MIN_QUESTIONS_REQUIRED} từ để bắt đầu luyện tập.
+        ⚠️ Bạn cần học thêm ít nhất {MIN_QUESTIONS_REQUIRED} từ để bắt đầu luyện
+        tập.
         <br />
-        <Link href="/unit" className="text-blue-600 underline mt-2 inline-block">
+        <Link
+          href="/unit"
+          className="text-blue-600 underline mt-2 inline-block"
+        >
           📘 Học từ vựng ngay
         </Link>
       </div>
@@ -158,7 +163,8 @@ export default function VocabularyQuiz() {
         <h2 className="text-3xl font-bold text-green-600">🎉 Hoàn thành!</h2>
 
         <p>
-          Bạn trả lời đúng <strong>{quizState.score}</strong> / {questions.length} câu.
+          Bạn trả lời đúng <strong>{quizState.score}</strong> /{" "}
+          {questions.length} câu.
         </p>
 
         {quizState.error && (

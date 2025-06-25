@@ -141,9 +141,9 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
             href="/"
             onClick={handleCloseMobileMenu}
             className="text-2xl font-bold text-green-600 hover:text-green-700"
-            aria-label="Trang chủ Flash Vocab"
+            aria-label="Trang chủ EnglishVoca"
           >
-            Flash Vocab
+            EnglishVoca
           </Link>
           <button
             onClick={handleCloseMobileMenu}
@@ -166,7 +166,7 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
             href="/"
             className="text-3xl font-bold text-green-600 hover:text-green-700"
           >
-            Flash Vocab
+            EnglishVoca
           </Link>
         </header>
         <ul className="space-y-3 text-base flex-grow mb-6">{mainMenu.map((item) => renderMenuItem(item))}</ul>

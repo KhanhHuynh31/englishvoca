@@ -30,8 +30,9 @@ export const useVocabularyQuiz = () => {
         if (userData?.user) {
           const { data, error } = await supabase
             .from("user_vocab")
-            .select(`
-              created_at,
+            .select(
+              `
+              last_reviewed,
               word_status,
               vocabulary (
                 id,
@@ -43,7 +44,8 @@ export const useVocabularyQuiz = () => {
                 definition,
                 image_url
               )
-            `)
+            `
+            )
             .eq("user_id", userData.user.id);
 
           if (data && !error) {
@@ -63,7 +65,7 @@ export const useVocabularyQuiz = () => {
                 pronunciation: v?.phonetic || "",
                 image_url: v?.image_url || "",
                 status: item.word_status || "new",
-                lastReviewed: item.created_at || new Date().toISOString(),
+                lastReviewed: item.last_reviewed || new Date().toISOString(),
               };
             });
 
@@ -87,7 +89,8 @@ export const useVocabularyQuiz = () => {
   }, [localData]);
 
   // 🧠 Shuffle & generate quiz
-  const shuffle = <T,>(arr: T[]): T[] => [...arr].sort(() => Math.random() - 0.5);
+  const shuffle = <T>(arr: T[]): T[] =>
+    [...arr].sort(() => Math.random() - 0.5);
 
   const getWrongAnswers = (): string[] => {
     try {
@@ -126,7 +129,9 @@ export const useVocabularyQuiz = () => {
     const sortedVocab = [...vocabData].sort((a, b) => {
       const score = (w: Word) =>
         (w.status === "new" ? 3 : w.status === "hard" ? 2 : 1) +
-        (Date.now() - new Date(w.lastReviewed).getTime()) / (1000 * 60 * 60 * 24) / 30 +
+        (Date.now() - new Date(w.lastReviewed).getTime()) /
+          (1000 * 60 * 60 * 24) /
+          30 +
         (wrongList.includes(w.term) ? 5 : 0) +
         (usedWords.includes(w.term) ? -10 : 10);
       return score(b) - score(a);
@@ -203,12 +208,37 @@ export const useVocabularyQuiz = () => {
         };
       });
   };
+  const updateLastReviewed = async (word: string) => {
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) return;
+
+      const { error } = await supabase
+        .from("user_vocab")
+        .update({ last_reviewed: new Date().toISOString() })
+        .match({
+          user_id: user.id,
+          word_id: vocabData.find((v) => v.term === word)?.id,
+        });
+
+      if (error) {
+        console.error("Failed to update last_reviewed", error);
+      }
+    } catch (err) {
+      console.error("Error updating last_reviewed", err);
+    }
+  };
 
   return {
     questions,
     setQuestions,
     updateWrongAnswers,
     getWrongQuestionObjects,
+    updateLastReviewed,
     isLoading, // ✅ thêm loading để kiểm soát hiển thị
   };
 };

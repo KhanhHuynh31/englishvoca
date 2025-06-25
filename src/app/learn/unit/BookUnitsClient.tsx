@@ -26,11 +26,11 @@ interface Props {
   units: Unit[];
 }
 
-const UNIT_TYPES = ["Tất cả", "Ngữ pháp", "Từ vựng", "Giao tiếp"] as const;
 const ITEMS_PER_PAGE = 4;
 
 export default function BookUnitsClient({ units: fallbackUnits }: Props) {
   const [units, setUnits] = useState<Unit[]>(fallbackUnits);
+  const [topics, setTopics] = useState<string[]>(["Tất cả"]);
   const [filterType, setFilterType] = useState("Tất cả");
   const [hideLearned, setHideLearned] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,6 +49,13 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
 
       if (unitError || !unitList) return setUnits(fallbackUnits);
 
+      // 🆕 Lấy danh sách topic duy nhất
+      const uniqueTopics = Array.from(
+        new Set(unitList.map((unit) => unit.topic))
+      ).filter(Boolean);
+
+      setTopics(["Tất cả", ...uniqueTopics]);
+
       const learnedMap: Record<number, Set<string>> = {};
       const totalMap: Record<number, number> = {};
 
@@ -62,14 +69,12 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
           .select("word_id");
 
         if (allVocabs && userVocabs) {
-          // Đếm số từ trong mỗi unit
           for (const vocab of allVocabs) {
             const unitId = vocab.unit_id;
             if (!unitId) continue;
             totalMap[unitId] = (totalMap[unitId] || 0) + 1;
           }
 
-          // Đánh dấu từ đã học theo unit
           for (const vocab of allVocabs) {
             const unitId = vocab.unit_id;
             if (!unitId) continue;
@@ -82,7 +87,6 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
         }
       }
 
-      // Gán status từng unit
       const finalUnits: Unit[] = unitList.map((unit) => {
         const learnedCount = learnedMap[unit.id]?.size || 0;
         const totalCount = totalMap[unit.id] || 0;
@@ -146,14 +150,14 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
   };
 
   return (
-    <div className="w-full p-4 ">
+    <div className="w-full p-4">
       <div className="mb-6 max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-3">
         <span className="text-sm text-gray-600 flex items-center gap-1">
           <Filter className="w-4 h-4" />
           Bộ lọc:
         </span>
 
-        {UNIT_TYPES.map((type) => (
+        {topics.map((type) => (
           <button
             key={type}
             onClick={() => handleTypeChange(type)}

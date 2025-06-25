@@ -277,9 +277,7 @@ const WordBook = () => {
 
   // --- Render JSX ---
   if (loading) {
-    return (
-      <LoadingWordBook/>
-    );
+    return <LoadingWordBook />;
   }
 
   if (error) {
@@ -297,7 +295,7 @@ const WordBook = () => {
   }
 
   return (
-    <div className="w-full px-4 py-4 bg-[#fdf6e3] text-gray-800">
+    <div className="w-full min-h-full px-4 py-4 bg-[#fdf6e3] text-gray-800">
       <div className="max-w-7xl mx-auto space-y-6">
         <header className="sticky top-0 z-10 bg-[#fdf6e3]/90 backdrop-blur-md rounded-b-xl p-4 shadow-md">
           <div className="flex flex-wrap items-center justify-between gap-4">

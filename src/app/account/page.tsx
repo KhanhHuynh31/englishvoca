@@ -115,7 +115,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center  backdrop-blur-sm">
       <div
         ref={modalRef}
         className="relative bg-[#2D333B] text-gray-100 w-full max-w-md rounded-xl shadow-2xl p-8 mx-4"
@@ -193,34 +193,30 @@ const LoginPage = () => {
         {!isRegister && (
           <>
             {/* OR Divider */}
-            <div className="flex items-center my-6">
+            {/* <div className="flex items-center my-6">
               <div className="flex-grow border-t border-gray-600"></div>
               <span className="mx-4 text-gray-400 uppercase text-sm font-semibold">
                 HOẶC
               </span>
               <div className="flex-grow border-t border-gray-600"></div>
-            </div>
+            </div> */}
 
             {/* Social */}
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               <button className="w-full bg-[#1877F2] hover:bg-[#156ACB] text-white font-bold py-3 rounded-md flex items-center justify-center space-x-2">
                 <span>FACEBOOK</span>
               </button>
               <button className="w-full bg-white hover:bg-gray-100 text-gray-800 font-bold py-3 rounded-md flex items-center justify-center space-x-2">
                 <span>GOOGLE</span>
               </button>
-            </div>
+            </div> */}
           </>
         )}
 
         {/* Disclaimers */}
         <p className="text-gray-400 text-xs text-center mt-8 leading-relaxed px-2">
-          Khi đăng ký bạn đã đồng ý với Các chính sách và Chính sách bảo mật của
+          Khi đăng ký bạn đã đồng ý với Các chính sách bảo mật của
           chúng tôi.
-        </p>
-        <p className="text-gray-400 text-xs text-center mt-2 leading-relaxed px-2">
-          Trang này được bảo vệ bởi reCAPTCHA và theo Chính sách bảo mật và Điều
-          khoản dịch vụ của Google.
         </p>
       </div>
       <Toaster position="top-center" reverseOrder={false} />

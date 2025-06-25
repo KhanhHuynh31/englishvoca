@@ -23,7 +23,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="w-full bg-slate-50">
-      <div className="max-w-5xl mx-auto px-4 py-4">
+      <div className="mx-auto px-4 py-4">
         <div className="bg-white p-6 rounded-2xl shadow-md mb-8">
           <div className="flex items-center gap-6">
             <div className="relative w-24 h-24">
