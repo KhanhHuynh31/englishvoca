@@ -15,7 +15,6 @@ import { clearVocabHistory, updateVocabStatus } from "@/lib/vocabularyDB";
 // import { useGetIndexDB } from "@/components/hooks/useGetIndexDB"; // LOẠI BỎ IMPORT NÀY
 import {
   useVocabulary,
-  Word as VocabularyWord,
 } from "@/components/hooks/useVocabulary"; // IMPORT HOOK MỚI VÀ ĐỔI TÊN WORD ĐỂ TRÁNH TRÙNG LẶP
 import LoadingWordBook from "./loading";
 
@@ -129,7 +128,7 @@ const WordCardComponent = ({
         )}
         {word.example && (
           <p className="text-xs text-gray-600 italic mt-1">
-            VD: "{word.example}"
+            VD: &quot;{word.example}&quot;
           </p>
         )}
       </div>
