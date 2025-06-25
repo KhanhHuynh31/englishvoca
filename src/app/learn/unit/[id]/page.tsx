@@ -31,5 +31,5 @@ export default async function FlashcardPage(props: {
     );
   }
 
-  return <FlashcardClient id={id} vocabData={data} />;
+  return <FlashcardClient vocabData={data} />;
 }
