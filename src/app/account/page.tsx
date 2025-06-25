@@ -84,8 +84,12 @@ const LoginPage = () => {
       // Xóa lịch sử local chỉ khi đã chèn lên server thành công
       await clearVocabHistory();
       toast.success(`Đồng bộ thành công ${newEntries.length} từ.`);
-    } catch (error: any) {
-      console.error("Lỗi khi đồng bộ dữ liệu:", error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error("Lỗi khi đồng bộ dữ liệu:", error.message);
+      } else {
+        console.error("Lỗi khi đồng bộ dữ liệu:", error);
+      }
       toast.error("Có lỗi xảy ra khi đồng bộ dữ liệu của bạn.");
     } finally {
       // Tác vụ này luôn được gọi sau khi xác thực thành công,
