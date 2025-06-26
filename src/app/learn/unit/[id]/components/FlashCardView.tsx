@@ -13,7 +13,7 @@ interface VocabularyItem {
   synonyms?: string[];
   otherMeanings?: string[];
   definition: string;
-  partOfSpeech: string;
+  part_of_speech: string;
 }
 
 type StatusType = "known" | "new" | "hard";

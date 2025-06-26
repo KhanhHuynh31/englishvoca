@@ -72,7 +72,7 @@ export const useVocabulary = () => {
                 id,
                 word,
                 phonetic,
-                partOfSpeech,
+                part_of_speech,
                 meaning,
                 example,
                 definition,

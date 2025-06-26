@@ -54,7 +54,7 @@ export default function ProfileIndexDB() {
               id,
               word,
               phonetic,
-              partOfSpeech,
+              part_of_speech,
               meaning,
               example,
               definition,
