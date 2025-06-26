@@ -1,231 +1,286 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
-import { signInAction, signUpAction } from "@/app/actions/auth";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
-import { clearVocabHistory, getAllVocabHistory } from "@/lib/vocabularyDB";
+import { signInAction, signUpAction } from "@/app/actions/auth";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getAllVocabHistory, clearVocabHistory } from "@/lib/vocabularyDB";
 
-const LoginPage = () => {
-  const [isRegister, setIsRegister] = useState(false);
-  const [isPending, startTransition] = useTransition();
+type AuthMode = "login" | "register" | "forgot" | "reset";
 
-  const modalRef = useRef<HTMLDivElement>(null);
+const AccountPage = () => {
+  const [mode, setMode] = useState<AuthMode>("login");
+  const [loading, setLoading] = useState(false);
+  const [form, setForm] = useState({ email: "", password: "", confirm: "" });
+  const [fadeIn, setFadeIn] = useState(true);
+  const [emailError, setEmailError] = useState("");
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
+  const router = useRouter();
 
   useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, []);
-
-  const closePopup = () => {
-    if (typeof window !== "undefined") {
-      window.history.back();
+    const search = new URLSearchParams(window.location.search);
+    const error = search.get("error");
+    // ✅ Nếu link khôi phục hết hạn hoặc sai
+    if (error) {
+      toast.error("Link đã hết hạn. Vui lòng yêu cầu lại.", {
+        duration: 3000,
+      });
+      setTimeout(() => {
+        setMode("forgot");
+      }, 1000);
+      return;
     }
-  };
 
-  /**
-   * Hàm trợ giúp: Xử lý tất cả các tác vụ sau khi xác thực thành công.
-   * Bao gồm hiển thị thông báo, đồng bộ dữ liệu và đóng popup.
-   */
-  const handleAuthSuccess = async (isRegister: boolean) => {
-    // Hiển thị thông báo thành công cho người dùng
-    toast.success(isRegister ? "Đăng ký thành công!" : "Đăng nhập thành công!");
-
-    try {
-      const localVocab = await getAllVocabHistory();
-      // Nếu không có từ vựng local, không làm gì thêm
-      if (localVocab.length === 0) {
-        console.log("ℹ️ IndexedDB trống, không có dữ liệu để import.");
-        return;
-      }
-
+    const checkRecovery = async () => {
       const supabase = createSupabaseBrowserClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        console.error("Chưa đăng nhập! Không thể đồng bộ.");
+      if (user) {
+        setMode("reset"); // 👉 Cho phép đổi mật khẩu
+      }
+    };
+
+    checkRecovery();
+  }, []);
+
+  const title = {
+    login: "Đăng nhập",
+    register: "Đăng ký",
+    forgot: "Quên mật khẩu",
+    reset: "Đặt lại mật khẩu",
+  }[mode];
+
+  const change = (field: string, value: string) => {
+    setForm({ ...form, [field]: value });
+    if (field === "email") setEmailError(""); // clear email error khi người dùng gõ lại
+  };
+
+  const setFadeOutAndSwitch = (next: AuthMode) => {
+    setFadeIn(false);
+    setTimeout(() => {
+      setMode(next);
+      setFadeIn(true);
+    }, 200);
+  };
+
+  const checkEmailExists = async (email: string): Promise<boolean> => {
+    const res = await fetch("/api/check-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    return data.exists === true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const supabase = createSupabaseBrowserClient();
+
+    try {
+      if (mode === "forgot") {
+        if (!form.email.includes("@")) {
+          setEmailError("Email không hợp lệ");
+          emailInputRef.current?.focus();
+          return;
+        }
+
+        const exists = await checkEmailExists(form.email);
+        if (!exists) {
+          setEmailError("Email không tồn tại trong hệ thống.");
+          emailInputRef.current?.focus();
+          setLoading(false); // ❗ Phải dừng loading nếu trả về sớm
+          return;
+        }
+
+        const { error } = await supabase.auth.resetPasswordForEmail(
+          form.email,
+          {
+            redirectTo: `${window.location.origin}/account`,
+          }
+        );
+
+        if (error) throw error;
+        toast.success("Đã gửi email khôi phục!");
+        setFadeOutAndSwitch("login");
         return;
       }
 
-      // 1. Lấy từ vựng đã có của user trên server
-      const { data: existingVocab, error: fetchError } = await supabase
-        .from("user_vocab")
-        .select("word_id")
-        .eq("user_id", user.id);
-
-      if (fetchError) throw new Error(fetchError.message);
-
-      // 2. Lọc ra những từ mới chưa có trên server
-      const existingWordIds = new Set(existingVocab?.map((v) => v.word_id));
-      const newEntries = localVocab
-        .filter((item) => !existingWordIds.has(item.id))
-        .map((item) => ({
-          user_id: user.id,
-          word_id: item.id,
-          word_status: item.status,
-        }));
-
-      if (newEntries.length === 0) {
-        console.log("ℹ️ Không có từ vựng mới để đồng bộ.");
+      if (mode === "reset") {
+        const { error } = await supabase.auth.updateUser({
+          password: form.password,
+        });
+        if (error) throw error;
+        toast.success("Đổi mật khẩu thành công!");
+        setTimeout(() => router.push("/"), 1500);
         return;
       }
 
-      // 3. Chèn các từ mới vào database
-      const { error: insertError } = await supabase
-        .from("user_vocab")
-        .insert(newEntries);
+      // login / register
+      const action = mode === "login" ? signInAction : signUpAction;
+      const formData = new FormData();
+      formData.append("email", form.email);
+      formData.append("password", form.password);
+      if (mode === "register") formData.append("confirmPassword", form.confirm);
 
-      if (insertError) throw new Error(insertError.message);
-
-      // Xóa lịch sử local chỉ khi đã chèn lên server thành công
-      await clearVocabHistory();
-      toast.success(`Đồng bộ thành công ${newEntries.length} từ.`);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        console.error("Lỗi khi đồng bộ dữ liệu:", error.message);
+      const result = await action(formData);
+      if (result?.success) {
+        toast.success(title + " thành công!");
+        await handleSyncAfterAuth();
+        setTimeout(() => router.push("/"), 1000);
       } else {
-        console.error("Lỗi khi đồng bộ dữ liệu:", error);
+        toast.error(result?.message || "Có lỗi xảy ra.");
       }
-      toast.error("Có lỗi xảy ra khi đồng bộ dữ liệu của bạn.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Lỗi không xác định");
     } finally {
-      // Tác vụ này luôn được gọi sau khi xác thực thành công,
-      // dù cho việc đồng bộ có lỗi hay không.
-      setTimeout(() => closePopup(), 1000);
+      setLoading(false);
     }
   };
 
-  /**
-   * Hàm chính: Xử lý sự kiện submit form.
-   */
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+  const handleSyncAfterAuth = async () => {
+    const localVocab = await getAllVocabHistory();
+    if (localVocab.length === 0) return;
 
-    startTransition(async () => {
-      const action = isRegister ? signUpAction : signInAction;
-      const result = await action(formData);
+    const supabase = createSupabaseBrowserClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
 
-      if (result?.success) {
-        // Ủy quyền xử lý cho hàm trợ giúp khi thành công
-        await handleAuthSuccess(isRegister);
-      } else {
-        toast.error(result?.message || "Đã xảy ra lỗi.");
-      }
-    });
+    const { data: existingVocab } = await supabase
+      .from("user_vocab")
+      .select("word_id")
+      .eq("user_id", user.id);
+
+    const existingIds = new Set(existingVocab?.map((v) => v.word_id));
+    const newEntries = localVocab
+      .filter((item) => !existingIds.has(item.id))
+      .map((item) => ({
+        user_id: user.id,
+        word_id: item.id,
+        word_status: item.status,
+      }));
+
+    if (newEntries.length > 0) {
+      await supabase.from("user_vocab").insert(newEntries);
+      await clearVocabHistory();
+      toast.success(`Đồng bộ ${newEntries.length} từ.`);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center  backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div
-        ref={modalRef}
-        className="relative bg-[#2D333B] text-gray-100 w-full max-w-md rounded-xl shadow-2xl p-8 mx-4"
+        className={`transition-all duration-500 ease-in-out transform ${
+          fadeIn ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        } bg-[#2D333B] text-white rounded-xl p-6 w-full max-w-md shadow-2xl relative`}
       >
-        {/* Top Bar */}
-        <div className="flex justify-between items-center mb-6">
-          <button
-            onClick={closePopup}
-            className="text-gray-400 hover:text-white text-2xl font-bold"
-            aria-label="Close popup"
-          >
-            &times;
-          </button>
-          <button
-            onClick={() => setIsRegister((prev) => !prev)}
-            className="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-md text-sm"
-          >
-            {isRegister ? "ĐĂNG NHẬP" : "ĐĂNG KÝ"}
-          </button>
-        </div>
+        <button
+          onClick={() => router.push("/")}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl font-bold"
+        >
+          &times;
+        </button>
 
-        {/* Title */}
-        <h1 className="text-3xl font-bold text-center mb-6 text-white">
-          {isRegister ? "Đăng ký" : "Đăng nhập"}
-        </h1>
+        <h1 className="text-2xl font-bold text-center mb-4">{title}</h1>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            required
-            className="w-full p-3 rounded-md bg-[#3B424A] border border-[#4B525B] focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
-          />
-          <div className="relative">
+          {(mode === "login" || mode === "register" || mode === "forgot") && (
+            <div>
+              <input
+                ref={emailInputRef}
+                type="email"
+                placeholder="Email"
+                required
+                value={form.email}
+                onChange={(e) => change("email", e.target.value)}
+                className={`w-full p-3 rounded-md bg-[#3B424A] border ${
+                  emailError ? "border-red-500" : "border-[#4B525B]"
+                } focus:outline-none`}
+              />
+              {emailError && (
+                <p className="text-red-400 text-sm mt-1">{emailError}</p>
+              )}
+            </div>
+          )}
+
+          {(mode === "login" || mode === "register" || mode === "reset") && (
             <input
-              name="password"
               type="password"
               placeholder="Mật khẩu"
               required
-              className="w-full p-3 rounded-md bg-[#3B424A] border border-[#4B525B] focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400 pr-20"
+              value={form.password}
+              onChange={(e) => change("password", e.target.value)}
+              className="w-full p-3 rounded-md bg-[#3B424A] border border-[#4B525B] focus:outline-none"
             />
-            {!isRegister && (
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-blue-400 hover:text-blue-300 text-sm font-semibold"
-              >
-                QUÊN?
-              </button>
-            )}
-          </div>
-          {isRegister && (
+          )}
+
+          {mode === "register" && (
             <input
-              name="confirmPassword"
               type="password"
               placeholder="Nhập lại mật khẩu"
               required
-              className="w-full p-3 rounded-md bg-[#3B424A] border border-[#4B525B] focus:outline-none focus:ring-2 focus:ring-blue-500 text-white placeholder-gray-400"
+              value={form.confirm}
+              onChange={(e) => change("confirm", e.target.value)}
+              className="w-full p-3 rounded-md bg-[#3B424A] border border-[#4B525B] focus:outline-none"
             />
           )}
+
           <button
             type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-md transition duration-200 text-lg"
-            disabled={isPending}
+            disabled={loading}
+            className="w-full bg-blue-500 hover:bg-blue-600 py-3 rounded-md font-bold"
           >
-            {isPending
-              ? "Đang xử lý..."
-              : isRegister
-              ? "TẠO TÀI KHOẢN"
-              : "ĐĂNG NHẬP"}
+            {loading ? "Đang xử lý..." : title}
           </button>
         </form>
 
-        {!isRegister && (
-          <>
-            {/* OR Divider */}
-            {/* <div className="flex items-center my-6">
-              <div className="flex-grow border-t border-gray-600"></div>
-              <span className="mx-4 text-gray-400 uppercase text-sm font-semibold">
-                HOẶC
-              </span>
-              <div className="flex-grow border-t border-gray-600"></div>
-            </div> */}
-
-            {/* Social */}
-            {/* <div className="space-y-4">
-              <button className="w-full bg-[#1877F2] hover:bg-[#156ACB] text-white font-bold py-3 rounded-md flex items-center justify-center space-x-2">
-                <span>FACEBOOK</span>
+        <div className="mt-4 text-sm text-center text-gray-400 space-y-1">
+          {mode === "login" && (
+            <>
+              <button
+                onClick={() => setFadeOutAndSwitch("forgot")}
+                className="hover:underline"
+              >
+                Quên mật khẩu?
               </button>
-              <button className="w-full bg-white hover:bg-gray-100 text-gray-800 font-bold py-3 rounded-md flex items-center justify-center space-x-2">
-                <span>GOOGLE</span>
+              <br />
+              <button
+                onClick={() => setFadeOutAndSwitch("register")}
+                className="hover:underline"
+              >
+                Chưa có tài khoản?
               </button>
-            </div> */}
-          </>
-        )}
+            </>
+          )}
+          {mode === "register" && (
+            <button
+              onClick={() => setFadeOutAndSwitch("login")}
+              className="hover:underline"
+            >
+              Đã có tài khoản? Đăng nhập
+            </button>
+          )}
+          {(mode === "forgot" || mode === "reset") && (
+            <button
+              onClick={() => setFadeOutAndSwitch("login")}
+              className="hover:underline"
+            >
+              Quay lại đăng nhập
+            </button>
+          )}
+        </div>
 
-        {/* Disclaimers */}
-        <p className="text-gray-400 text-xs text-center mt-8 leading-relaxed px-2">
-          Khi đăng ký bạn đã đồng ý với Các chính sách bảo mật của
-          chúng tôi.
-        </p>
+        <Toaster position="top-center" />
       </div>
-      <Toaster position="top-center" reverseOrder={false} />
     </div>
   );
 };
 
-export default LoginPage;
+export default AccountPage;
