@@ -66,8 +66,8 @@ export default function BookUnitsClient({ units: fallbackUnits }: Props) {
 
         const { data: userVocabs } = await supabase
           .from("user_vocab")
-          .select("word_id");
-
+          .select("word_id")
+          .eq("user_id", user.id);
         if (allVocabs && userVocabs) {
           for (const vocab of allVocabs) {
             const unitId = vocab.unit_id;

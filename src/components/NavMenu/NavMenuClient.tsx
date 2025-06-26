@@ -164,7 +164,7 @@ export default function NavMenuClient({ isLoggedIn }: NavMenuClientProps) {
         <header className="mb-8 border-b border-gray-200 pb-4">
           <Link
             href="/"
-            className="text-3xl font-bold text-green-600 hover:text-green-700"
+            className="text-3xl font-black bg-gradient-to-r from-purple-800 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight"
           >
             EnglishVoca
           </Link>
