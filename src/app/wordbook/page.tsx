@@ -11,11 +11,9 @@ import {
 } from "react";
 import Listening from "@/components/Listening/Listening";
 import Pagination from "@/components/Pagination/Pagination";
-import { clearVocabHistory, updateVocabStatus } from "@/lib/vocabularyDB";
+import { updateVocabStatus } from "@/lib/vocabularyDB";
 // import { useGetIndexDB } from "@/components/hooks/useGetIndexDB"; // LOẠI BỎ IMPORT NÀY
-import {
-  useVocabulary,
-} from "@/components/hooks/useVocabulary"; // IMPORT HOOK MỚI VÀ ĐỔI TÊN WORD ĐỂ TRÁNH TRÙNG LẶP
+import { useVocabulary } from "@/components/hooks/useVocabulary"; // IMPORT HOOK MỚI VÀ ĐỔI TÊN WORD ĐỂ TRÁNH TRÙNG LẶP
 import LoadingWordBook from "./loading";
 
 // =================================================================
@@ -235,18 +233,6 @@ const WordBook = () => {
     },
     []
   );
-
-  const handleClearHistory = useCallback(async () => {
-    if (
-      window.confirm(
-        "Bạn có chắc chắn muốn xoá TOÀN BỘ từ vựng đã lưu không? Thao tác này không thể hoàn tác."
-      )
-    ) {
-      await clearVocabHistory();
-      setAllWords([]); // Xóa tất cả từ trong state
-    }
-  }, []);
-
   const handleCardClick = useCallback(
     (id: string) => {
       if (hideDefinition) {
@@ -311,13 +297,6 @@ const WordBook = () => {
               >
                 🧠 Ôn tập
               </Link>
-              <button
-                onClick={handleClearHistory}
-                className="px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors shadow-md"
-                title="Xoá tất cả từ đã lưu"
-              >
-                🗑️
-              </button>
             </div>
           </div>
 

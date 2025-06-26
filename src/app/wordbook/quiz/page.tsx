@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import Listening from "@/components/Listening/Listening";
 import { useVocabularyQuiz } from "@/components/hooks/useVocabularyQuiz";
+import * as Tone from "tone";
 
 interface QuizState {
   index: number;
@@ -30,6 +31,28 @@ const INITIAL_QUIZ_STATE: QuizState = {
 
 const ANSWER_DELAY = 1000;
 const MIN_QUESTIONS_REQUIRED = 4;
+
+// 🔊 Tạo âm thanh
+const playCorrectSound = () => {
+  const synth = new Tone.Synth().toDestination();
+  synth.triggerAttackRelease("C6", "8n");
+};
+
+const playWrongSound = () => {
+  const synth = new Tone.Synth().toDestination();
+  synth.triggerAttackRelease("C3", "8n");
+};
+
+const playUnknownSound = () => {
+  const synth = new Tone.Synth().toDestination();
+  synth.triggerAttackRelease("A4", "8n");
+};
+
+const playFinishSound = () => {
+  const synth = new Tone.Synth().toDestination();
+  synth.triggerAttackRelease("E5", "8n");
+  setTimeout(() => synth.triggerAttackRelease("G5", "8n"), 150);
+};
 
 export default function VocabularyQuiz() {
   const [quizState, setQuizState] = useState<QuizState>(INITIAL_QUIZ_STATE);
@@ -57,38 +80,47 @@ export default function VocabularyQuiz() {
     async (answer: string): Promise<void> => {
       if (!currentQuestion) return;
 
-      try {
-        const isCorrect = answer === currentQuestion.correct;
-        updateWrongAnswers(currentQuestion.word, isCorrect);
-        updateLastReviewed(currentQuestion.word);
-        setQuizState((prev) => ({
-          ...prev,
-          score: prev.score + (isCorrect ? 1 : 0),
-          selected: answer,
-          isProcessing: true,
-          error: null,
-        }));
+      await Tone.start(); // Đảm bảo cho phép phát âm sau tương tác đầu
 
-        await new Promise((resolve) => setTimeout(resolve, ANSWER_DELAY));
+      const isCorrect = answer === currentQuestion.correct;
 
-        setQuizState((prev) => {
-          const isLast = prev.index + 1 >= questions.length;
-          return {
-            ...prev,
-            index: isLast ? prev.index : prev.index + 1,
-            selected: null,
-            showHint: false,
-            finished: isLast,
-            isProcessing: false,
-          };
-        });
-      } catch {
-        setQuizState((prev) => ({
-          ...prev,
-          error: "Có lỗi xảy ra khi xử lý câu trả lời.",
-          isProcessing: false,
-        }));
+      // 🔊 Phát âm thanh
+      if (answer === "Không biết") {
+        playUnknownSound();
+      } else if (isCorrect) {
+        playCorrectSound();
+      } else {
+        playWrongSound();
       }
+
+      updateWrongAnswers(currentQuestion.word, isCorrect);
+      updateLastReviewed(currentQuestion.word);
+      setQuizState((prev) => ({
+        ...prev,
+        score: prev.score + (isCorrect ? 1 : 0),
+        selected: answer,
+        isProcessing: true,
+        error: null,
+      }));
+
+      await new Promise((resolve) => setTimeout(resolve, ANSWER_DELAY));
+
+      setQuizState((prev) => {
+        const isLast = prev.index + 1 >= questions.length;
+
+        if (isLast) {
+          playFinishSound(); // 🔊 Hoàn thành quiz
+        }
+
+        return {
+          ...prev,
+          index: isLast ? prev.index : prev.index + 1,
+          selected: null,
+          showHint: false,
+          finished: isLast,
+          isProcessing: false,
+        };
+      });
     },
     [currentQuestion, questions.length, updateWrongAnswers, updateLastReviewed]
   );
@@ -124,7 +156,6 @@ export default function VocabularyQuiz() {
     setQuizState((prev) => ({ ...prev, error: null }));
   }, []);
 
-  // ✅ Loading state
   if (isLoading) {
     return (
       <div className="p-6 text-center text-gray-500 text-lg">
@@ -133,12 +164,10 @@ export default function VocabularyQuiz() {
     );
   }
 
-  // ✅ Không đủ từ để tạo quiz
   if (questions.length < MIN_QUESTIONS_REQUIRED && !quizState.showOnlyWrong) {
     return (
       <div className="p-6 text-center text-lg text-gray-600">
-        ⚠️ Bạn cần học thêm ít nhất {MIN_QUESTIONS_REQUIRED} từ để bắt đầu luyện
-        tập.
+        ⚠️ Bạn cần học thêm ít nhất {MIN_QUESTIONS_REQUIRED} từ để bắt đầu luyện tập.
         <br />
         <Link
           href="/unit"
@@ -150,7 +179,6 @@ export default function VocabularyQuiz() {
     );
   }
 
-  // ✅ Quiz đã hoàn thành
   if (quizState.finished) {
     return (
       <div className="text-center space-y-4 p-6">
@@ -161,18 +189,14 @@ export default function VocabularyQuiz() {
         )}
 
         <h2 className="text-3xl font-bold text-green-600">🎉 Hoàn thành!</h2>
-
         <p>
-          Bạn trả lời đúng <strong>{quizState.score}</strong> /{" "}
-          {questions.length} câu.
+          Bạn trả lời đúng <strong>{quizState.score}</strong> / {questions.length} câu.
         </p>
 
         {quizState.error && (
           <div className="p-3 bg-red-100 border border-red-300 rounded text-red-700">
             {quizState.error}
-            <button onClick={clearError} className="ml-2 text-sm underline">
-              Đóng
-            </button>
+            <button onClick={clearError} className="ml-2 text-sm underline">Đóng</button>
           </div>
         )}
 
@@ -203,7 +227,6 @@ export default function VocabularyQuiz() {
     );
   }
 
-  // ✅ Giao diện quiz chính
   return (
     <div className="max-w-6xl mx-auto p-4 flex flex-col gap-6">
       <div>
@@ -216,9 +239,7 @@ export default function VocabularyQuiz() {
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
             className="h-full bg-blue-500 transition-all duration-300"
-            style={{
-              width: `${((quizState.index + 1) / questions.length) * 100}%`,
-            }}
+            style={{ width: `${((quizState.index + 1) / questions.length) * 100}%` }}
           />
         </div>
       </div>
@@ -226,9 +247,7 @@ export default function VocabularyQuiz() {
       {quizState.error && (
         <div className="p-3 bg-red-100 border border-red-300 rounded text-red-700">
           {quizState.error}
-          <button onClick={clearError} className="ml-2 text-sm underline">
-            Đóng
-          </button>
+          <button onClick={clearError} className="ml-2 text-sm underline">Đóng</button>
         </div>
       )}
 
