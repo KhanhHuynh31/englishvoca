@@ -13,9 +13,6 @@ import {
   TrendingUp,
   Star,
   ArrowDown,
-  Mail,
-  Phone,
-  MapPin,
   Facebook,
   Twitter,
   Instagram,
@@ -53,7 +50,7 @@ export default function LandingPage() {
 
       <div className="container mx-auto px-6 pt-6 relative">
         {/* ======================= HERO SECTION ======================= */}
-        <section className="grid md:grid-cols-2 gap-12 items-center mb-32 min-h-[80vh] relative">
+        <section className="grid md:grid-cols-2 gap-12 items-center mb-12 min-h-[80vh] relative">
           <div className="text-center md:text-left space-y-8">
             <div style={{ transitionDelay: "200ms" }} className={fadeInUp()}>
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-2 rounded-full text-sm font-medium text-purple-700 mb-6 animate-bounce">
@@ -80,8 +77,8 @@ export default function LandingPage() {
             >
               Biến việc học từ vựng thành một trải nghiệm{" "}
               <span className="font-semibold text-purple-600">ma thuật</span>.
-              Ghi nhớ sâu hơn với AI cá nhân hóa, flashcard tương tác và hệ
-              thống ôn tập thông minh.
+              Ghi nhớ sâu hơn với AI, flashcard tương tác và hệ thống ôn tập
+              thông minh.
             </p>
 
             <div
@@ -89,7 +86,7 @@ export default function LandingPage() {
               className={`${fadeInUp()} flex justify-center md:justify-start gap-6 flex-wrap`}
             >
               <Link
-                href="/register"
+                href="/learn/unit"
                 className="group bg-gradient-to-r from-purple-600 to-pink-600 text-white px-10 py-4 rounded-full text-lg font-bold hover:shadow-2xl hover:shadow-purple-500/25 transition-all duration-500 transform hover:-translate-y-2 hover:scale-105 relative overflow-hidden"
               >
                 <span className="relative z-10 flex items-center gap-2">
@@ -106,24 +103,6 @@ export default function LandingPage() {
                 Khám phá ngay
                 <ArrowDown className="w-4 h-4 group-hover:animate-bounce" />
               </Link>
-            </div>
-
-            <div
-              style={{ transitionDelay: "600ms" }}
-              className={`${fadeInUp()} flex items-center gap-8 pt-8`}
-            >
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600">10K+</div>
-                <div className="text-sm text-slate-500">Từ vựng</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-pink-600">50+</div>
-                <div className="text-sm text-slate-500">Chủ đề</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">95%</div>
-                <div className="text-sm text-slate-500">Hiệu quả</div>
-              </div>
             </div>
           </div>
 
@@ -164,7 +143,7 @@ export default function LandingPage() {
         </section>
 
         {/* ======================= HOW IT WORKS ======================= */}
-        <section id="how-it-works" className="mb-32">
+        <section id="how-it-works" className="mb-12">
           <div className="text-center mb-20">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 to-pink-100 px-4 py-2 rounded-full text-sm font-medium text-purple-700 mb-4">
               <Zap className="w-4 h-4" />
@@ -197,9 +176,9 @@ export default function LandingPage() {
                     "Khám phá hàng nghìn từ vựng được phân loại theo chủ đề. Học với flashcard tương tác, hình ảnh sinh động và phát âm chuẩn bản ngữ.",
                   steps: [
                     "📚 Chọn chủ đề yêu thích",
-                    "👀 Xem flashcard với hình ảnh",
-                    "🔊 Nghe phát âm chuẩn",
-                    "📝 Ghi chú từ khó nhớ",
+                    "👀 Xem flashcard",
+                    "🔊 Nghe phát âm",
+                    "📝 Ghi chú từ khó",
                   ],
                   color: "purple",
                   delay: "100ms",
@@ -210,8 +189,8 @@ export default function LandingPage() {
                   description:
                     "AI tạo quiz cá nhân hóa theo khả năng của bạn. Hệ thống nhắc nhở thông minh giúp bạn không bao giờ quên từ đã học.",
                   steps: [
-                    "🎯 Làm quiz thông minh",
-                    "🧠 AI điều chỉnh độ khó",
+                    "🎯 Học một số từ vựng",
+                    "🧠 AI chọn từ để ôn tập",
                     "⏰ Ôn tập theo lịch trình",
                     "🔄 Lặp lại từ khó",
                   ],
@@ -225,8 +204,8 @@ export default function LandingPage() {
                     "Dashboard cá nhân với biểu đồ tiến độ chi tiết. Đặt mục tiêu và nhận thành tích khi hoàn thành các cột mốc quan trọng.",
                   steps: [
                     "📊 Xem biểu đồ tiến độ",
-                    "🎯 Thiết lập mục tiêu",
-                    "🏆 Nhận thành tích",
+                    "🎯 Học từ mới chăm chỉ",
+                    "🏆 Ôn luyện từ vựng",
                     "📈 Cải thiện liên tục",
                   ],
                   color: "green",
@@ -325,29 +304,13 @@ export default function LandingPage() {
                         ))}
                       </ul>
                     </div>
-
-                    {/* Action Button */}
-                    <div className="pt-4 border-t border-slate-100">
-                      <button
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
-                          step.color === "purple"
-                            ? "bg-purple-50 text-purple-700 hover:bg-purple-100"
-                            : step.color === "pink"
-                            ? "bg-pink-50 text-pink-600 hover:bg-pink-100"
-                            : "bg-green-50 text-green-700 hover:bg-green-100"
-                        } hover:scale-105`}
-                      >
-                        Bắt đầu bước này
-                        <MoveRight size={16} />
-                      </button>
-                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Bottom Summary */}
-            <div className="mt-16 text-center">
+            <div className="mt-6 text-center">
               <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-100 via-pink-100 to-green-100 px-6 py-3 rounded-full">
                 <Sparkles className="w-5 h-5 text-purple-600" />
                 <span className="text-slate-700 font-medium">
@@ -359,7 +322,7 @@ export default function LandingPage() {
         </section>
 
         {/* ======================= FEATURES ======================= */}
-        <section className="mb-32">
+        <section className="mb-22">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-cyan-100 px-4 py-2 rounded-full text-sm font-medium text-blue-700 mb-4">
               <Sparkles className="w-4 h-4" />
@@ -394,7 +357,6 @@ export default function LandingPage() {
                   link: "text-purple-600 hover:text-purple-700",
                 },
                 link: "/vocab",
-                linkText: "Vào học ngay",
               },
               {
                 icon: BrainCircuit,
@@ -411,7 +373,6 @@ export default function LandingPage() {
                   link: "text-pink-500 hover:text-pink-600",
                 },
                 link: "/quiz",
-                linkText: "Luyện quiz",
               },
               {
                 icon: NotebookText,
@@ -428,7 +389,6 @@ export default function LandingPage() {
                   link: "text-green-600 hover:text-green-700",
                 },
                 link: "/wordbook",
-                linkText: "Xem sổ từ",
               },
             ].map((feature, index) => (
               <div key={index} className="group relative h-full">
@@ -451,17 +411,6 @@ export default function LandingPage() {
                   <p className="text-slate-600 mb-6 leading-relaxed flex-grow">
                     {feature.description}
                   </p>
-
-                  <Link
-                    href={feature.link}
-                    className={`inline-flex items-center gap-2 font-bold text-lg ${feature.colorClasses.link} hover:gap-3 transition-all duration-300 mt-auto`}
-                  >
-                    {feature.linkText}
-                    <MoveRight
-                      size={18}
-                      className="group-hover:translate-x-1 transition-transform"
-                    />
-                  </Link>
                 </div>
               </div>
             ))}
@@ -469,7 +418,7 @@ export default function LandingPage() {
         </section>
 
         {/* ======================= CTA Section ======================= */}
-        <section className="text-center mb-24">
+        <section className="text-center mb-22">
           <div className="relative bg-gradient-to-br from-purple-600 via-purple-700 to-pink-600 py-20 px-8 rounded-3xl overflow-hidden">
             <div className="absolute inset-0 opacity-20">
               <div
@@ -482,11 +431,6 @@ export default function LandingPage() {
             </div>
 
             <div className="relative z-10">
-              <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium text-white mb-6">
-                <Star className="w-4 h-4" />
-                Tham gia cộng đồng 50,000+ học viên
-              </div>
-
               <h2 className="text-4xl lg:text-5xl font-black text-white mb-6">
                 Bắt đầu hành trình chinh phục
                 <br />
@@ -509,38 +453,53 @@ export default function LandingPage() {
                   <MoveRight size={20} />
                 </div>
               </Link>
-
-              <p className="text-purple-200 text-sm mt-4">
-                ✓ Không cần thẻ tín dụng • ✓ Hủy bất cứ lúc nào • ✓ Hỗ trợ 24/7
-              </p>
             </div>
           </div>
         </section>
       </div>
 
       {/* ======================= FOOTER ======================= */}
-      <footer className="mt-32 bg-white rounded-t-3xl border-t border-gray-200 shadow-2xl shadow-gray-900/10 relative overflow-hidden">
-        {/* 3D Background Elements */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50/30 to-purple-50/20"></div>
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-radial from-purple-100/30 to-transparent rounded-full blur-3xl transform -translate-y-1/2"></div>
-        <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-gradient-radial from-pink-100/30 to-transparent rounded-full blur-2xl transform translate-y-1/2"></div>
+      <footer className=" bg-white border-t border-gray-200">
+        <div className="container mx-auto px-6 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            {/* Phần bên trái: Logo và Copyright */}
+            <div className="text-center md:text-left">
+              <h3 className="text-2xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                EnglishVoca
+              </h3>
+              <p className="text-sm text-gray-500">
+                © {new Date().getFullYear()} All Rights Reserved.
+              </p>
+            </div>
 
-        <div className="relative container mx-auto px-6 pt-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
-            {/* Company Info */}
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-2xl font-black bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-                  EnglishVoca
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  Nền tảng học từ vựng tiếng Anh thông minh với công nghệ AI
-                  tiên tiến, giúp bạn chinh phục ngôn ngữ một cách hiệu quả
-                  nhất.
-                </p>
+            {/* Phần bên phải: Liên kết và Mạng xã hội */}
+            <div className="flex flex-col sm:flex-row items-center gap-8">
+              {/* Liên kết nhanh */}
+              <div className="flex gap-6">
+                <Link
+                  href="/"
+                  className="text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  Trang chủ
+                </Link>
+                <Link
+                  href="/learn/unit"
+                  className="text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  Học từ mới
+                </Link>
+                <Link
+                  href="/"
+                  className="text-gray-700 hover:text-purple-600 transition-colors"
+                >
+                  Liên hệ
+                </Link>
               </div>
 
-              {/* Social Links */}
+              {/* Đường kẻ phân cách (chỉ hiển thị trên màn hình lớn) */}
+              <div className="hidden sm:block w-px h-6 bg-gray-200"></div>
+
+              {/* Mạng xã hội */}
               <div className="flex gap-4">
                 {[
                   { icon: Facebook, color: "hover:bg-blue-600", link: "#" },
@@ -551,107 +510,11 @@ export default function LandingPage() {
                   <Link
                     key={index}
                     href={social.link}
-                    className={`w-10 h-10 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 ${social.color} hover:text-white transition-all duration-300 hover:scale-110 hover:-translate-y-2 hover:shadow-lg hover:border-transparent transform-gpu`}
+                    className={`text-gray-500 ${social.color} p-2 rounded-full transition-colors`}
                   >
-                    <social.icon size={18} />
+                    <social.icon size={20} />
                   </Link>
                 ))}
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-lg font-bold text-gray-800 mb-6">
-                Liên kết nhanh
-              </h4>
-              <ul className="space-y-3">
-                {[
-                  { label: "Trang chủ", link: "/" },
-                  { label: "Học từ vựng", link: "/vocab" },
-                  { label: "Luyện quiz", link: "/quiz" },
-                  { label: "Sổ từ cá nhân", link: "/wordbook" },
-                  { label: "Thống kê tiến độ", link: "/progress" },
-                ].map((item, index) => (
-                  <li key={index}>
-                    <Link
-                      href={item.link}
-                      className="text-gray-600 hover:text-purple-600 transition-all duration-300 hover:translate-x-2 hover:scale-105 inline-block transform-gpu"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Support */}
-            <div>
-              <h4 className="text-lg font-bold text-gray-800 mb-6">Hỗ trợ</h4>
-              <ul className="space-y-3">
-                {[
-                  { label: "Trung tâm trợ giúp", link: "/help" },
-                  { label: "Câu hỏi thường gặp", link: "/faq" },
-                  { label: "Hướng dẫn sử dụng", link: "/guide" },
-                  { label: "Báo cáo lỗi", link: "/report" },
-                  { label: "Liên hệ", link: "/contact" },
-                ].map((item, index) => (
-                  <li key={index}>
-                    <Link
-                      href={item.link}
-                      className="text-gray-600 hover:text-pink-600 transition-all duration-300 hover:translate-x-2 hover:scale-105 inline-block transform-gpu"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Contact Info */}
-            <div>
-              <h4 className="text-lg font-bold text-gray-800 mb-6">Liên hệ</h4>
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 transform-gpu">
-                    <Mail className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm">Email hỗ trợ</p>
-                    <a
-                      href="mailto:support@englishup.com"
-                      className="text-gray-800 font-medium hover:text-purple-600 transition-colors"
-                    >
-                      support@englishup.com
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 transform-gpu">
-                    <Phone className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm">Hotline</p>
-                    <a
-                      href="tel:+84123456789"
-                      className="text-gray-800 font-medium hover:text-green-600 transition-colors"
-                    >
-                      +84 123 456 789
-                    </a>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1 shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300 transform-gpu">
-                    <MapPin className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-sm">Địa chỉ</p>
-                    <p className="text-gray-800 font-medium">
-                      TP. Hồ Chí Minh, Việt Nam
-                    </p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
