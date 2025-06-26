@@ -445,7 +445,7 @@ export default function LandingPage() {
               </p>
 
               <Link
-                href="/register"
+                href="/learn/unit"
                 className="group inline-flex items-center gap-3 bg-white text-purple-700 px-10 py-4 rounded-full text-xl font-bold hover:bg-gray-50 transition-all duration-300 hover:scale-105 hover:-translate-y-1 shadow-xl"
               >
                 Bắt đầu ngay - 100% Miễn phí

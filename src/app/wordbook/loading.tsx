@@ -2,7 +2,7 @@
 
 export default function LoadingWordBook() {
   return (
-    <div className="w-full min-h-[450px] px-4 py-8 bg-[#fdf6e3] text-gray-800 animate-pulse">
+    <div className="w-full h-full px-4 py-8 bg-[#fdf6e3] text-gray-800 animate-pulse">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header skeleton */}
         <div className="sticky top-0 z-10 bg-[#fdf6e3]/90 backdrop-blur-md rounded-b-xl p-4 shadow-md">
@@ -13,7 +13,6 @@ export default function LoadingWordBook() {
             </div>
             <div className="flex items-center gap-3">
               <div className="h-9 w-20 bg-orange-300 rounded-full shadow-md" />
-              <div className="h-9 w-9 bg-red-300 rounded-lg" />
             </div>
           </div>
 
