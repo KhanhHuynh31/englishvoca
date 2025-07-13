@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📚 VocabMaster - Interactive Vocabulary Learning Platform  
 
-## Getting Started
+<img width="1896" height="910" alt="{6A26FE72-578C-41E1-87A4-010C9B00D86A}" src="https://github.com/user-attachments/assets/334d57e6-b0fa-493b-bcf9-1c6c277dc524" />
 
-First, run the development server:
+*A modern, interactive platform for effective vocabulary learning*
 
+## ✨ Features
+
+### 🎯 Engaging Learning Tools
+- **Smart Flashcards** with flip animations for better retention
+- **Adaptive Quizzes** that focus on your weak areas
+- **Progress Tracking** with visual analytics
+- **Topic-based Learning** organized by categories
+
+### ⚡ Technical Highlights
+- **Offline-First** design using IndexedDB
+- **Real-time Sync** with Supabase backend
+- **Responsive UI** works on all devices
+- **Type-Safe** codebase with TypeScript
+
+## 🛠 Tech Stack
+
+**Frontend:**
+- Next.js (App Router)
+- React 18
+- TypeScript
+- Tailwind CSS
+
+**Backend & Storage:**
+- Supabase (Auth + PostgreSQL)
+- IndexedDB (offline storage)
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js v18+
+- npm or yarn
+- Supabase account
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/vocabmaster.git
+   cd vocabmaster
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   Create `.env.local` file with:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+   ```
+
+4. **Database setup**
+   - Import the SQL schema from `/supabase/setup.sql`
+   - Or set up tables manually in Supabase Dashboard
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+   Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+## 🔧 Build & Deployment
+
+**Build for production:**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**Start production server:**
+```bash
+npm start
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Deploy to Vercel:**
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/vocabmaster)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📬 Contact
 
-## Learn More
+For questions or opportunities:
 
-To learn more about Next.js, take a look at the following resources:
+- **Email**: qk31082000@gmail.com
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Happy Learning!** 🚀
